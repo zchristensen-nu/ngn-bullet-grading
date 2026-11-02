@@ -369,20 +369,26 @@ function render(){
 }
 
 function setStatus(t){ const el = $("status"); if(el) el.textContent = t; }
-let saveTimer = null;
+let saveTimer = null, inflight = null, again = false;
+async function post(){
+  const body = {id:gid, name:state.name, team:state.team, done:state.done, picks:state.picks, notes:state.notes,
+    headers: STORIES.flatMap((s,i) => [`${two(i+1)} ${s.h}`, `${two(i+1)} note`]),
+    summary: STORIES.map(s => [state.picks[s.id] ? PICK_LABEL[pref(s, state.picks[s.id])] : "", state.notes[s.id] || ""])};
+  try{
+    const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body)});
+    const j = await r.json(); if(!j.ok) throw new Error(j.error || "rejected");
+    setStatus("Saved");
+  }catch(e){ setStatus("Couldn’t save. Your picks are kept in this browser; we’ll retry on your next pick."); }
+}
+// Apps Script drops overlapping requests, so one save runs at a time; picks made meanwhile ride the next one.
+function run(){
+  if(!/^https?:\/\//.test(SCRIPT_URL)){ setStatus("Not saving yet: the results sheet isn’t connected."); return; }
+  if(inflight){ again = true; return inflight; }
+  inflight = (async () => { do { again = false; await post(); } while(again); })().finally(() => { inflight = null; });
+  return inflight;
+}
 async function save(now){
   clearTimeout(saveTimer);
-  const run = async () => {
-    if(!/^https?:\/\//.test(SCRIPT_URL)){ setStatus("Not saving yet: the results sheet isn’t connected."); return; }
-    const body = {id:gid, name:state.name, team:state.team, done:state.done, picks:state.picks, notes:state.notes,
-      headers: STORIES.flatMap((s,i) => [`${two(i+1)} ${s.h}`, `${two(i+1)} note`]),
-      summary: STORIES.map(s => [state.picks[s.id] ? PICK_LABEL[pref(s, state.picks[s.id])] : "", state.notes[s.id] || ""])};
-    try{
-      const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body)});
-      const j = await r.json(); if(!j.ok) throw new Error(j.error || "rejected");
-      setStatus("Saved");
-    }catch(e){ setStatus("Couldn’t save. Your picks are kept in this browser; we’ll retry on your next pick."); }
-  };
   if(now) return run();
   saveTimer = setTimeout(run, 900);
 }
