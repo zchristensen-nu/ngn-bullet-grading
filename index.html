@@ -14,6 +14,8 @@
   --rule:#e2e2df; --rule-strong:#cfcfcb; --accent:#c8102e; --accent-ink:#a50d26; --wash:#fbeef0;
   --tie:#5b6472; --tie-wash:#eef0f3; --ok:#2f6f4f;
   --paper:#ffffff; --ink-soft:#2b2d31; --shadow:rgba(20,22,28,.08);
+  /* Diverging scale, Sent (blue) <-> Claude (red), gray midpoint. Each arm validated as a one-hue ramp. */
+  --d2:#1f4e8c; --d1:#7d9cc8; --even:#cdccc6; --c1:#ea8494; --c2:#c8102e;
   --sans:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
@@ -21,11 +23,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111214; --surface:#18191c; --ink:#ececee; --muted:#a2a4ab; --faint:#7d7f86;
   --rule:#2a2c30; --rule-strong:#3a3c41; --accent:#e0485c; --accent-ink:#ececee; --wash:#2a181c;
-  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); color-scheme:dark }}
+  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); --d2:#9cbdf0; --d1:#4f6d99; --even:#3a3c41; --c1:#a8495a; --c2:#ff6b7d; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#111214; --surface:#18191c; --ink:#ececee; --muted:#a2a4ab; --faint:#7d7f86;
   --rule:#2a2c30; --rule-strong:#3a3c41; --accent:#e0485c; --accent-ink:#ececee; --wash:#2a181c;
-  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); color-scheme:dark }
+  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); --d2:#9cbdf0; --d1:#4f6d99; --even:#3a3c41; --c1:#a8495a; --c2:#ff6b7d; color-scheme:dark }
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
@@ -201,6 +203,49 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ptable td:last-child{min-width:16em;color:var(--ink-soft)}
 .ptable .pill{justify-self:auto}
 @media (max-width:560px){.xbody{padding-left:0}}
+/* Five-step scale under the two versions */
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin-top:var(--s5);border:1.5px solid var(--ink);border-radius:3px;overflow:hidden;background:var(--surface)}
+.scale button{border:0;border-left:1px solid var(--rule-strong);background:none;padding:12px 6px;font-weight:600;font-size:14.5px;line-height:1.25;text-align:center;transition:background .12s,color .12s}
+.scale button:first-child{border-left:0}
+.scale button small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.scale button:hover{background:var(--tie-wash)}
+.scale button[aria-checked="true"]{background:var(--ink);color:var(--bg)}
+.scale button[aria-checked="true"] small{color:inherit;opacity:.8}
+.scale button[data-pick^="A"][aria-checked="true"],.scale button[data-pick^="B"][aria-checked="true"]{background:var(--accent);color:#fff}
+.scale-ends{display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;color:var(--faint)}
+@media (max-width:560px){.scale button{font-size:13px;padding:10px 2px}.scale button small{font-size:11px}}
+.why-pick{margin-top:var(--s4);display:flex;flex-direction:column;gap:var(--s2)}
+.why-pick .mono{color:var(--muted)}
+.chip.sm span{padding:6px 11px;font-size:13.5px}
+
+/* Results: diverging bars, Sent to the left of center, Claude to the right */
+.div{position:relative;height:14px;border-bottom:1px solid var(--rule)}
+.div.big{height:30px}
+.div i{position:absolute;top:0;bottom:0;border-inline:1px solid var(--bg)}
+.div i.first{border-top-left-radius:4px;border-bottom-left-radius:4px}
+.div i.last{border-top-right-radius:4px;border-bottom-right-radius:4px}
+.div .mid{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink)}
+.div .d2,.sw.d2{background:var(--d2)} .div .d1,.sw.d1{background:var(--d1)} .div .same,.sw.same{background:var(--even)}
+.div .c1,.sw.c1{background:var(--c1)} .div .c2,.sw.c2{background:var(--c2)}
+.divcell{display:flex;flex-direction:column;gap:5px;min-width:0}
+.divcell small{display:grid;grid-template-columns:1fr auto 1fr;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.divcell small span:nth-child(2){text-align:center} .divcell small span:last-child{text-align:right}
+.row.thin{opacity:.45}
+.axis{display:grid;grid-template-columns:1fr 1fr;font-size:12.5px;font-weight:600}
+.axis span:last-child{text-align:right}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px}
+.row.wide{grid-template-columns:2.2em minmax(0,1fr) minmax(220px,42%)}
+.why{display:grid;grid-template-columns:minmax(0,1fr) 9.5em minmax(0,1fr);gap:var(--s3);align-items:center;padding-block:7px;border-bottom:1px solid var(--rule);font-size:14px}
+.why .lab{text-align:center;font-weight:500}
+.why .l,.why .r{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px}
+.why .l{justify-content:flex-end}
+.why .l i,.why .r i{display:block;height:12px;min-width:2px}
+.why .l i{background:var(--d2);border-radius:4px 0 0 4px}
+.why .r i{background:var(--c2);border-radius:0 4px 4px 0}
+.why.head{font-size:12.5px;font-weight:600;border-bottom:1px solid var(--ink)}
+.why.head .l,.why.head .r{color:var(--ink);font-size:12.5px}
+.pill.lot{font-weight:700}
+@media (max-width:560px){.row.wide{grid-template-columns:2em minmax(0,1fr)}.row.wide .divcell{grid-column:1/-1}.why{grid-template-columns:minmax(0,1fr) 7em minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 [hidden]{display:none!important}
 img{max-width:100%}
@@ -220,7 +265,7 @@ img{max-width:100%}
 
 <dialog id="howto" aria-labelledby="howto-h">
   <h2 id="howto-h">Click the one you like more.</h2>
-  <p>You’ll see two versions of the same newsletter story, side by side. Only the bullets differ.</p>
+  <p>You’ll see two versions of the same newsletter story, side by side. Only the bullets differ. Use the scale under them to say by how much.</p>
   <form id="howto-form" novalidate>
     <label for="grader-name">Your name</label>
     <input id="grader-name" name="grader-name" autocomplete="name" required placeholder="First and last name">
@@ -238,7 +283,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const two = n => String(n).padStart(2,"0");
 
-const state = { cur:0, picks:{}, notes:{}, done:false, mode:"grade", name:"", team:"" };
+const state = { cur:0, picks:{}, notes:{}, reasons:{}, done:false, mode:"grade", name:"", team:"" };
 let isOwner = false;
 // Votes go to a Google Sheet through its Apps Script web app (see SETUP.md).
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyk-JT4bOIY9wq5NCzlIB0iuNOph_fBfCZE0WnHY7Y0KoCPe0dNU2hTj4rKtRf1Aws/exec";
@@ -250,10 +295,15 @@ if(new URLSearchParams(location.search).has("reset")){
 }
 const gid = (() => { try{ let v = localStorage.getItem("grader-id"); if(!v){ v = crypto.randomUUID(); localStorage.setItem("grader-id", v); } return v; }catch(_){ return crypto.randomUUID(); } })();
 const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2,"0")).join("");
-const PICK_LABEL = {desk:"Sent", claude:"Claude", same:"Even", skip:"Skipped"};
 
-// pick is "A" | "B" | "same"; turn it into whose bullets won
-const pref = (s, p) => p === "skip" ? "skip" : p === "same" ? "same" : (["A","B"].indexOf(p) === s.d ? "desk" : "claude");
+// pick is "A2" | "A1" | "same" | "B1" | "B2" | "skip" (2 = a lot better, 1 = a bit; a bare "A"/"B" reads as a bit)
+const side = p => /^[AB]/.test(p || "") ? p[0] : null;
+const pref = (s, p) => p === "skip" ? "skip" : p === "same" ? "same" : (["A","B"].indexOf(side(p)) === s.d ? "desk" : "claude");
+// d2 d1 same c1 c2 skip: whose bullets won, and by how much
+const lvl = (s, p) => { const r = pref(s, p); return r === "desk" || r === "claude" ? r[0] + (/2$/.test(p) ? "2" : "1") : r; };
+const LVL_LABEL = {d2:"Sent, a lot", d1:"Sent, a bit", same:"Even", c1:"Claude, a bit", c2:"Claude, a lot", skip:"Skipped"};
+const REASONS = ["Better hook", "Clearer", "More accurate", "Better tone", "Easier to skim"];
+const SCALE = [["A2","A","much better"],["A1","A","a bit better"],["same","Even",""],["B1","B","a bit better"],["B2","B","much better"]];
 const graded = () => STORIES.filter(s => state.picks[s.id]).length;
 
 function renderTicks(){
@@ -267,9 +317,9 @@ function list(bs){ return bs.map(b => `<li><b>${esc(b.label)}</b> ${esc(b.text)}
 function renderGrade(){
   const s = STORIES[state.cur], p = state.picks[s.id];
   const card = (k, i) => {
-    const picked = p === k, tied = p === "same", skipped = p === "skip";
-    return `<article class="proof ${picked?"picked":""} ${tied?"tied":""} ${skipped?"skipped":""} ${state.done?"":"choosable"}" ${state.done?"":`data-pick="${k}"`} aria-label="Version ${k}">
-      <header><span class="letter"><b>${k}</b>VERSION ${k}</span>${picked?`<span class="verdict-tag">Your pick</span>`:tied?`<span class="verdict-tag">Even</span>`:p==="skip"?`<span class="verdict-tag skip">Skipped</span>`:""}</header>
+    const picked = side(p) === k, tied = p === "same", skipped = p === "skip";
+    return `<article class="proof ${picked?"picked":""} ${tied?"tied":""} ${skipped?"skipped":""} ${state.done?"":"choosable"}" ${state.done?"":`data-card="${k}"`} aria-label="Version ${k}">
+      <header><span class="letter"><b>${k}</b>VERSION ${k}</span>${picked?`<span class="verdict-tag">${/2$/.test(p)?"Much better":"A bit better"}</span>`:tied?`<span class="verdict-tag">Even</span>`:p==="skip"?`<span class="verdict-tag skip">Skipped</span>`:""}</header>
       <div class="email">
         <figure><img src="img/${s.id}.jpg" alt="${esc(s.alt)}" loading="lazy"></figure>
         <div class="body">
@@ -279,15 +329,19 @@ function renderGrade(){
           <a class="read" href="${esc(s.url)}" target="_blank" rel="noopener">Read this story</a>
         </div>
       </div>
-      ${state.done ? `<div class="src ${i===s.d?"":"claude"}">${i===s.d?"Sent in the newsletter":"Written by Claude"}</div>` :
-        `<button type="button" class="choose" data-pick="${k}" aria-pressed="${picked}">${picked?"✓ You like "+k+" more":"I like "+k+" more"}</button>`}
+      ${state.done ? `<div class="src ${i===s.d?"":"claude"}">${i===s.d?"Sent in the newsletter":"Written by Claude"}</div>` : ""}
     </article>`;
   };
+  const why = side(p) && !state.done ? `<div class="why-pick"><span class="mono">What made ${side(p)} better? Optional, pick any</span><div class="chips">${REASONS.map(r =>
+    `<label class="chip sm"><input type="checkbox" data-reason="${esc(r)}" ${(state.reasons[s.id]||[]).includes(r)?"checked":""}><span>${esc(r)}</span></label>`).join("")}</div></div>` : "";
   const allDone = graded() === N;
   $("view").innerHTML = `<div class="story">
-    <div class="slug mono"><span class="n">Story ${two(state.cur+1)} of ${N}</span><span>Click the one you like more</span></div>
+    <div class="slug mono"><span class="n">Story ${two(state.cur+1)} of ${N}</span><span>Click the one you like more, then say by how much</span></div>
     <div class="proofs">${card("A",0)}${card("B",1)}</div>
-    ${state.done ? "" : `<div class="even"><button type="button" data-pick="same" aria-pressed="${p==="same"}">${p==="same"?"✓ You called them even":"Can’t choose? Call them even"}</button><span aria-hidden="true">·</span><button type="button" data-pick="skip" aria-pressed="${p==="skip"}">${p==="skip"?"✓ Skipped: you worked on this story":"I wrote or edited this story. Skip it"}</button></div>
+    ${state.done ? "" : `<div class="scale" role="radiogroup" aria-label="Which do you like more, and by how much?">${SCALE.map(([v,a,b]) =>
+      `<button type="button" role="radio" data-pick="${v}" aria-checked="${p===v || (v[1]==="1" && p===v[0])}">${a}${b?`<small>${b}</small>`:""}</button>`).join("")}</div>
+    ${why}
+    <div class="even"><button type="button" data-pick="skip" aria-pressed="${p==="skip"}">${p==="skip"?"✓ Skipped: you worked on this story":"I wrote or edited this story. Skip it"}</button></div>
     <div class="note"><label class="mono" for="note">What tipped it? Optional</label>
       <textarea id="note" placeholder="A label that hooked you, a sentence that dragged, a fact that was wrong…">${esc(state.notes[s.id]||"")}</textarea></div>`}
     <div class="nav">
@@ -301,17 +355,28 @@ function renderGrade(){
 }
 
 function tally(rows){
-  const t = {desk:0, claude:0, same:0};
-  rows.forEach(r => { if(r in t) t[r]++; }); return t;
+  const t = {d2:0, d1:0, same:0, c1:0, c2:0};
+  rows.forEach(r => { if(r in t) t[r]++; });
+  t.desk = t.d2 + t.d1; t.claude = t.c2 + t.c1; return t;
 }
-function bar(t){
-  const n = t.desk + t.claude + t.same || 1;
-  return `<div class="barcell"><div class="bar" role="img" aria-label="${t.desk} preferred the newsletter, ${t.same} even, ${t.claude} preferred Claude"><i class="d" style="width:${t.desk/n*100}%"></i><i class="t" style="width:${t.same/n*100}%"></i><i class="c" style="width:${t.claude/n*100}%"></i></div><small><span>${t.desk} sent</span><span>${t.same} even</span><span>${t.claude} Claude</span></small></div>`;
-}
-
+const counted = t => t.desk + t.same + t.claude;
 const pct = (n, of) => of ? Math.round(n/of*100) + "%" : "–";
-const prefLabel = {desk:"Sent", claude:"Claude", same:"Even", skip:"Skipped"};
+const SEGS = ["d2","d1","same","c1","c2"];
+// Diverging bar: center line = even split; Sent grows left, Claude grows right; each half spans 100% of votes.
+function divbar(t, big){
+  const n = counted(t);
+  const w = k => n ? t[k]/n*50 : 0;
+  let x = 50 - (w("d2") + w("d1") + w("same")/2);
+  const on = SEGS.filter(k => t[k]);
+  const segs = on.map((k,j) => { const s = `<i class="${k} ${j===0?"first":""} ${j===on.length-1?"last":""}" style="left:${x}%;width:${w(k)}%" title="${LVL_LABEL[k]}: ${t[k]} (${pct(t[k],n)})"></i>`; x += w(k); return s; });
+  return `<div class="divcell"><div class="div ${big?"big":""}" role="img" aria-label="${SEGS.map(k => `${LVL_LABEL[k]} ${t[k]}`).join(", ")}">${segs.join("")}<b class="mid"></b></div>
+    <small><span>Sent ${pct(t.desk,n)}</span><span>${t.same ? "Even " + pct(t.same,n) : ""}</span><span>Claude ${pct(t.claude,n)}</span></small></div>`;
+}
+const legend = `<div class="legend">${SEGS.map(k => `<span><i class="sw ${k}"></i>${LVL_LABEL[k]}</span>`).join("")}</div>`;
+const pill = r => r ? `<span class="pill ${r[0]==="d"?"desk":r[0]==="c"?"claude":r} ${/2$/.test(r)?"lot":""}">${LVL_LABEL[r]}</span>` : `<span class="hint">–</span>`;
 const TEAMS = ["Editor", "Writer", "Digital", "Media Relations", "Social Media", "Photo/Video", "Other"];
+const MIN_N = 3; // groups smaller than this are shown faded: too few people to read a split from
+
 function renderDash(){
   if(!state.done && !isOwner && location.hash !== "#results"){
     $("view").innerHTML = `<div class="results"><h2>Results open once you’ve finished all ${N} stories.</h2><p class="lede">You’re ${graded()} in. Seeing the team’s picks first would sway yours.</p><div><button type="button" class="btn primary" data-go="${Math.max(0, STORIES.findIndex(s => !state.picks[s.id]))}">Keep grading</button></div></div>`;
@@ -320,48 +385,60 @@ function renderDash(){
   if(team === null){ $("view").innerHTML = `<div class="results"><p class="empty">${teamErr || "Loading results…"}</p></div>`; return; }
   const people = [...team].sort((a,b) => String(a.name||"").localeCompare(String(b.name||"")));
   const nameOf = d => d.name || "Unnamed";
-  const rowsOf = d => STORIES.map(s => d.picks?.[s.id] ? pref(s, d.picks[s.id]) : null);
-  const counted = t => t.desk + t.same + t.claude;
+  const rowsOf = d => STORIES.map(s => d.picks?.[s.id] ? lvl(s, d.picks[s.id]) : null);
   const all = tally(people.flatMap(rowsOf));
   const finished = people.filter(d => d.done).length;
-  const mineRows = STORIES.map(s => state.picks[s.id] ? pref(s, state.picks[s.id]) : null), mine = tally(mineRows);
+  const mineRows = STORIES.map(s => state.picks[s.id] ? lvl(s, state.picks[s.id]) : null), mine = tally(mineRows);
+  const reasonsOf = (d, s) => (d.reasons?.[s.id] || []).filter(r => REASONS.includes(r));
+
   const you = state.done ? `
     <section class="you">
       <h2>You preferred Claude’s bullets in ${mine.claude} of ${counted(mine)} stories.</h2>
-      <div class="score">
-        <div><strong>${mine.desk}</strong><span>Preferred what went out</span></div>
-        <div><strong>${mine.same}</strong><span>Called it even</span></div>
-        <div><strong>${mine.claude}</strong><span>Preferred Claude</span></div>
-      </div>
+      ${divbar(mine, true)}
       <details class="xrow mine"><summary class="row"><span class="n"></span><span class="h">Your picks, story by story</span></summary>
-        <div class="xbody"><table class="ptable"><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} <button type="button" class="linkish" data-go="${i}">${esc(s.h)}</button></td><td><span class="pill ${mineRows[i]}">${prefLabel[mineRows[i]]||"–"}</span></td></tr>`).join("")}</tbody></table></div></details>
+        <div class="xbody"><table class="ptable"><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} <button type="button" class="linkish" data-go="${i}">${esc(s.h)}</button></td><td>${pill(mineRows[i])}</td><td>${esc((state.reasons[s.id]||[]).join(", "))}</td></tr>`).join("")}</tbody></table></div></details>
     </section>` : "";
-  const byTeam = TEAMS.map(tm => { const ps = people.filter(d => d.team === tm); const t = tally(ps.flatMap(rowsOf)); return {tm, n:ps.length, t}; }).filter(x => x.n);
+
+  const byTeam = TEAMS.map(tm => { const ps = people.filter(d => d.team === tm); return {tm, n:ps.length, t:tally(ps.flatMap(rowsOf))}; }).filter(x => x.n);
+
+  // Why: how often each reason was given, for picks that went to each side
+  const why = {desk:{}, claude:{}};
+  people.forEach(d => STORIES.forEach(s => { const r = d.picks?.[s.id] && pref(s, d.picks[s.id]); if(why[r]) reasonsOf(d, s).forEach(x => why[r][x] = (why[r][x]||0) + 1); }));
+  const wmax = Math.max(1, ...REASONS.flatMap(r => [why.desk[r]||0, why.claude[r]||0]));
+  const anyWhy = REASONS.some(r => why.desk[r] || why.claude[r]);
+
   $("view").innerHTML = `<div class="results">
     ${you}
     <section>
       <div class="section-h"><h3>Everyone</h3><button type="button" class="btn" id="refresh">Refresh</button></div>
-      <p class="lede">${people.length} ${people.length===1?"person has":"people have"} graded, ${finished} finished. Skipped stories don’t count toward anyone’s split.</p>
+      <p class="lede" style="margin:0">${people.length} ${people.length===1?"person has":"people have"} graded, ${finished} finished. Skipped stories don’t count.</p>
       <div class="score">
-        <div><strong>${pct(all.desk, counted(all))}</strong><span>${all.desk} picks for what went out</span></div>
+        <div><strong>${pct(all.desk, counted(all))}</strong><span>${all.desk} picks for what was sent · ${all.d2} by a lot</span></div>
         <div><strong>${pct(all.same, counted(all))}</strong><span>${all.same} called even</span></div>
-        <div><strong>${pct(all.claude, counted(all))}</strong><span>${all.claude} picks for Claude</span></div>
+        <div><strong>${pct(all.claude, counted(all))}</strong><span>${all.claude} picks for Claude · ${all.c2} by a lot</span></div>
       </div>
-      <div class="legend"><span><i style="background:var(--ink)"></i>Sent in the newsletter</span><span><i style="background:var(--rule-strong)"></i>Even</span><span><i style="background:var(--accent)"></i>Claude</span></div>
+      ${divbar(all, true)}
+      ${legend}
     </section>
-    ${byTeam.length ? `<section><div class="section-h"><h3>By team</h3></div><div class="rows">${byTeam.map(x => `<div class="row"><span class="n">${x.n}</span><span class="h">${esc(x.tm)}<small>${x.n} ${x.n===1?"person":"people"} · Sent ${pct(x.t.desk,counted(x.t))} · Even ${pct(x.t.same,counted(x.t))} · Claude ${pct(x.t.claude,counted(x.t))}</small></span>${bar(x.t)}</div>`).join("")}</div></section>` : ""}
+    ${byTeam.length ? `<section><div class="section-h"><h3>By team</h3><span class="hint">Faded rows have fewer than ${MIN_N} people</span></div>
+      <div class="axis"><span>← Preferred what was sent</span><span>Preferred Claude →</span></div>
+      <div class="rows">${byTeam.map(x => `<div class="row wide ${x.n<MIN_N?"thin":""}"><span class="n">${x.n}</span><span class="h">${esc(x.tm)}<small>${x.n} ${x.n===1?"person":"people"} · ${counted(x.t)} votes</small></span>${divbar(x.t)}</div>`).join("")}</div></section>` : ""}
+    ${anyWhy ? `<section><div class="section-h"><h3>Why people picked a side</h3><span class="hint">Times each reason was given</span></div>
+      <div><div class="why head"><span class="l">For what was sent</span><span class="lab"></span><span class="r">For Claude</span></div>
+      ${REASONS.map(r => { const a = why.desk[r]||0, b = why.claude[r]||0; return `<div class="why"><span class="l">${a}<i style="width:${a/wmax*80}%"></i></span><span class="lab">${esc(r)}</span><span class="r"><i style="width:${b/wmax*80}%"></i>${b}</span></div>`; }).join("")}</div></section>` : ""}
     <section>
-      <div class="section-h"><h3>By story</h3><span class="hint">Click a story for names and notes</span></div>
-      <div class="rows">${STORIES.map((s,i) => { const ps = people.map(d => d.picks?.[s.id] ? {d, r:pref(s, d.picks[s.id])} : null).filter(Boolean); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
+      <div class="section-h"><h3>By story</h3><span class="hint">Click a story for names, reasons and notes</span></div>
+      <div class="axis"><span>← Preferred what was sent</span><span>Preferred Claude →</span></div>
+      <div class="rows">${STORIES.map((s,i) => { const ps = people.map(d => d.picks?.[s.id] ? {d, r:lvl(s, d.picks[s.id])} : null).filter(Boolean); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
         const notes = ps.filter(x => (x.d.notes?.[s.id]||"").trim()).length;
-        return `<details class="xrow"><summary class="row"><span class="n">${two(i+1)}</span><span class="h">${esc(s.h)}<small>${n} ${n===1?"vote":"votes"} · Sent ${pct(t.desk,n)} · Even ${pct(t.same,n)} · Claude ${pct(t.claude,n)}${sk?` · ${sk} skipped`:""}${notes?` · ${notes} ${notes===1?"note":"notes"}`:""}</small></span>${bar(t)}</summary>
-          <div class="xbody">${ps.length ? `<table class="ptable"><thead><tr><th>Name</th><th>Team</th><th>Picked</th><th>Note</th></tr></thead><tbody>${ps.map(x => `<tr><td>${esc(nameOf(x.d))}</td><td>${esc(x.d.team||"")}</td><td><span class="pill ${x.r}">${prefLabel[x.r]}</span></td><td>${esc(x.d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">No votes yet.</p>`}</div></details>`; }).join("")}</div>
+        return `<details class="xrow"><summary class="row wide ${n<MIN_N?"thin":""}"><span class="n">${two(i+1)}</span><span class="h">${esc(s.h)}<small>${n} ${n===1?"vote":"votes"}${sk?` · ${sk} skipped`:""}${notes?` · ${notes} ${notes===1?"note":"notes"}`:""}</small></span>${divbar(t)}</summary>
+          <div class="xbody">${ps.length ? `<table class="ptable"><thead><tr><th>Name</th><th>Team</th><th>Picked</th><th>Why</th><th>Note</th></tr></thead><tbody>${ps.map(x => `<tr><td>${esc(nameOf(x.d))}</td><td>${esc(x.d.team||"")}</td><td>${pill(x.r)}</td><td>${esc(reasonsOf(x.d, s).join(", "))}</td><td>${esc(x.d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">No votes yet.</p>`}</div></details>`; }).join("")}</div>
     </section>
     <section>
       <div class="section-h"><h3>By person</h3><span class="hint">Click a name for every pick and note</span></div>
       ${people.length ? `<div class="rows">${people.map(d => { const rs = rowsOf(d), t = tally(rs), g = rs.filter(Boolean).length;
-        return `<details class="xrow"><summary class="row"><span class="n">${d.done?"✓":g}</span><span class="h">${esc(nameOf(d))}${d.team?` <span class="team">${esc(d.team)}</span>`:""}<small>${d.done?"Finished":g+" of "+N+" graded"} · Sent ${t.desk} · Even ${t.same} · Claude ${t.claude}</small></span>${bar(t)}</summary>
-          <div class="xbody"><table class="ptable"><thead><tr><th>Story</th><th>Picked</th><th>Note</th></tr></thead><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} ${esc(s.h)}</td><td>${rs[i]?`<span class="pill ${rs[i]}">${prefLabel[rs[i]]}</span>`:"–"}</td><td>${esc(d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table></div></details>`; }).join("")}</div>` : `<p class="empty">No responses yet.</p>`}
+        return `<details class="xrow"><summary class="row wide"><span class="n">${d.done?"✓":g}</span><span class="h">${esc(nameOf(d))}${d.team?` <span class="team">${esc(d.team)}</span>`:""}<small>${d.done?"Finished":g+" of "+N+" graded"}</small></span>${divbar(t)}</summary>
+          <div class="xbody"><table class="ptable"><thead><tr><th>Story</th><th>Picked</th><th>Why</th><th>Note</th></tr></thead><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} ${esc(s.h)}</td><td>${pill(rs[i])}</td><td>${esc(reasonsOf(d, s).join(", "))}</td><td>${esc(d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table></div></details>`; }).join("")}</div>` : `<p class="empty">No one has graded yet.</p>`}
     </section>
   </div>`;
 }
@@ -376,9 +453,9 @@ function render(){
 function setStatus(t){ const el = $("status"); if(el) el.textContent = t; }
 let saveTimer = null, inflight = null, again = false;
 async function post(){
-  const body = {id:gid, name:state.name, team:state.team, done:state.done, picks:state.picks, notes:state.notes,
+  const body = {id:gid, name:state.name, team:state.team, done:state.done, picks:state.picks, notes:state.notes, reasons:state.reasons,
     headers: STORIES.flatMap((s,i) => [`${two(i+1)} ${s.h}`, `${two(i+1)} note`]),
-    summary: STORIES.map(s => [state.picks[s.id] ? PICK_LABEL[pref(s, state.picks[s.id])] : "", state.notes[s.id] || ""])};
+    summary: STORIES.map(s => [state.picks[s.id] ? [LVL_LABEL[lvl(s, state.picks[s.id])], ...(state.reasons[s.id]||[])].join(" · ") : "", state.notes[s.id] || ""])};
   try{
     const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body)});
     const j = await r.json(); if(!j.ok) throw new Error(j.error || "rejected");
@@ -405,24 +482,28 @@ async function loadTeam(){
     team = (j.rows || []).map(r => ({...r, _id:r.key}));
     // Show this browser's latest picks even if the sheet hasn't caught up.
     const me = team.find(r => r.key === myKey);
-    if(me){ Object.assign(me, {name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, done:state.done}); }
-    else if(state.name && graded()) team.push({key:myKey, _id:myKey, name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, done:state.done});
+    if(me){ Object.assign(me, {name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, reasons:{...state.reasons}, done:state.done}); }
+    else if(state.name && graded()) team.push({key:myKey, _id:myKey, name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, reasons:{...state.reasons}, done:state.done});
     teamErr = "";
   }catch(e){ team = null; teamErr = "Couldn’t load results. Check your connection and refresh."; }
 }
 
-function keepLocal(){ try{ localStorage.setItem("grader-state", JSON.stringify({picks:state.picks, notes:state.notes, done:state.done})); }catch(_){} }
+function keepLocal(){ try{ localStorage.setItem("grader-state", JSON.stringify({picks:state.picks, notes:state.notes, reasons:state.reasons, done:state.done})); }catch(_){} }
 function go(i){ state.cur = Math.max(0, Math.min(N-1, i)); state.mode = "grade"; render(); window.scrollTo({top:0, behavior:"auto"}); }
 function pick(k){
   if(state.done) return;
   if(!state.name || !state.team){ openHowto(); return; }
-  state.picks[STORIES[state.cur].id] = k; keepLocal(); render(); save(true);
+  const id = STORIES[state.cur].id;
+  if(side(k) !== side(state.picks[id])) delete state.reasons[id];
+  state.picks[id] = k; keepLocal(); render(); save(true);
 }
 
 document.addEventListener("click", async e => {
   const g = e.target.closest("[data-go]"); if(g){ go(+g.dataset.go); return; }
   if(e.target.closest("a")) return;
   const p = e.target.closest("[data-pick]"); if(p){ pick(p.dataset.pick); return; }
+  // Clicking a version leans a bit toward it, unless it's already the chosen side.
+  const c = e.target.closest("[data-card]"); if(c){ if(side(state.picks[STORIES[state.cur].id]) !== c.dataset.card) pick(c.dataset.card + "1"); return; }
   const id = e.target.closest("button")?.id;
   if(id === "prev") go(state.cur-1);
   if(id === "next"){ const nxt = STORIES.findIndex((s,i) => i > state.cur && !state.picks[s.id]); const any = STORIES.findIndex(s => !state.picks[s.id]); go(nxt !== -1 ? nxt : any !== -1 ? any : state.cur); }
@@ -433,13 +514,17 @@ document.addEventListener("click", async e => {
   if(id === "who"){ openHowto(); }
 });
 document.addEventListener("input", e => {
+  if(e.target.dataset.reason){ const id = STORIES[state.cur].id, r = e.target.dataset.reason, cur = state.reasons[id] || [];
+    state.reasons[id] = e.target.checked ? [...cur.filter(x => x !== r), r] : cur.filter(x => x !== r);
+    if(!state.reasons[id].length) delete state.reasons[id]; keepLocal(); save(false); return; }
   if(e.target.id === "note"){ state.notes[STORIES[state.cur].id] = e.target.value; keepLocal(); save(false); }
 });
 document.addEventListener("keydown", e => {
   if(e.target.closest("textarea,input") || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
   if(state.mode !== "grade") return;
-  if(k === "a") pick("A"); else if(k === "b") pick("B"); else if(k === "e") pick("same");
+  if(k === "a") pick("A1"); else if(k === "b") pick("B1"); else if(k === "e") pick("same");
+  else if(/^[1-5]$/.test(k)) pick(SCALE[+k-1][0]);
   else if(e.key === "ArrowRight") go(state.cur+1); else if(e.key === "ArrowLeft") go(state.cur-1);
 });
 
@@ -462,7 +547,7 @@ if(!state.name || !state.team) openHowto();
   isOwner = location.hash === "#results";
   try{
     const s = JSON.parse(localStorage.getItem("grader-state") || "null");
-    if(s && typeof s === "object"){ Object.assign(state.picks, s.picks || {}); Object.assign(state.notes, s.notes || {}); state.done = !!s.done && graded() === N; }
+    if(s && typeof s === "object"){ Object.assign(state.picks, s.picks || {}); Object.assign(state.notes, s.notes || {}); Object.assign(state.reasons, s.reasons || {}); state.done = !!s.done && graded() === N; }
   }catch(_){}
   myKey = await sha256(gid);
   if(state.done || isOwner){ state.mode = "results"; render(); await loadTeam(); }

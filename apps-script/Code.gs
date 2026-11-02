@@ -18,8 +18,8 @@ function doPost(e) {
     const at = keys.indexOf(key);
     const row = at === -1 ? last + 1 : at + 2;
     const vals = [key, cell_(d.name, 80), cell_(d.team, 40), d.done ? 'Yes' : 'No', new Date(),
-      JSON.stringify({ picks: obj_(d.picks), notes: obj_(d.notes) })];
-    (Array.isArray(d.summary) ? d.summary : []).slice(0, 60).forEach(p => vals.push(cell_(p[0], 20), cell_(p[1], 2000)));
+      JSON.stringify({ picks: obj_(d.picks), notes: obj_(d.notes), reasons: obj_(d.reasons) })];
+    (Array.isArray(d.summary) ? d.summary : []).slice(0, 60).forEach(p => vals.push(cell_(p[0], 200), cell_(p[1], 2000)));
     sh.getRange(row, 1, 1, vals.length).setValues([vals]);
     return out_({ ok: true });
   } catch (err) {
@@ -37,7 +37,7 @@ function doGet() {
   const rows = v.filter(r => r[0]).map(r => {
     let raw = {};
     try { raw = JSON.parse(r[5]); } catch (_) {}
-    return { key: r[0], name: r[1], team: r[2], done: r[3] === 'Yes', picks: raw.picks || {}, notes: raw.notes || {} };
+    return { key: r[0], name: r[1], team: r[2], done: r[3] === 'Yes', picks: raw.picks || {}, notes: raw.notes || {}, reasons: raw.reasons || {} };
   });
   return out_({ rows });
 }
