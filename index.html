@@ -14,7 +14,7 @@
   --rule:#e2e2df; --rule-strong:#cfcfcb; --accent:#c8102e; --accent-ink:#a50d26; --wash:#fbeef0;
   --tie:#5b6472; --tie-wash:#eef0f3; --ok:#2f6f4f;
   --paper:#ffffff; --ink-soft:#2b2d31; --shadow:rgba(20,22,28,.08);
-  /* Diverging scale, Sent (blue) <-> Claude (red), gray midpoint. Each arm validated as a one-hue ramp. */
+  /* Diverging scale, Writers (blue) <-> Claude (red), gray midpoint. Each arm validated as a one-hue ramp. */
   --d2:#1f4e8c; --d1:#7d9cc8; --even:#cdccc6; --c1:#ea8494; --c2:#c8102e;
   --sans:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -218,7 +218,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .why-pick .mono{color:var(--muted)}
 .chip.sm span{padding:6px 11px;font-size:13.5px}
 
-/* Results: diverging bars, Sent to the left of center, Claude to the right */
+/* Results: diverging bars, Writers to the left of center, Claude to the right */
 .div{position:relative;height:14px;border-bottom:1px solid var(--rule)}
 .div.big{height:30px}
 .div i{position:absolute;top:0;bottom:0;border-inline:1px solid var(--bg)}
@@ -301,7 +301,7 @@ const side = p => /^[AB]/.test(p || "") ? p[0] : null;
 const pref = (s, p) => p === "skip" ? "skip" : p === "same" ? "same" : (["A","B"].indexOf(side(p)) === s.d ? "desk" : "claude");
 // d2 d1 same c1 c2 skip: whose bullets won, and by how much
 const lvl = (s, p) => { const r = pref(s, p); return r === "desk" || r === "claude" ? r[0] + (/2$/.test(p) ? "2" : "1") : r; };
-const LVL_LABEL = {d2:"Sent, a lot", d1:"Sent, a bit", same:"Even", c1:"Claude, a bit", c2:"Claude, a lot", skip:"Skipped"};
+const LVL_LABEL = {d2:"Writers, a lot", d1:"Writers, a bit", same:"Even", c1:"Claude, a bit", c2:"Claude, a lot", skip:"Skipped"};
 const REASONS = ["Better hook", "Clearer", "More accurate", "Better tone", "Easier to skim"];
 const SCALE = [["A2","A","much better"],["A1","A","a bit better"],["same","Even",""],["B1","B","a bit better"],["B2","B","much better"]];
 const graded = () => STORIES.filter(s => state.picks[s.id]).length;
@@ -329,7 +329,7 @@ function renderGrade(){
           <a class="read" href="${esc(s.url)}" target="_blank" rel="noopener">Read this story</a>
         </div>
       </div>
-      ${state.done ? `<div class="src ${i===s.d?"":"claude"}">${i===s.d?"Sent in the newsletter":"Written by Claude"}</div>` : ""}
+      ${state.done ? `<div class="src ${i===s.d?"":"claude"}">${i===s.d?"Written by our writers":"Written by Claude"}</div>` : ""}
     </article>`;
   };
   const why = side(p) && !state.done ? `<div class="why-pick"><span class="mono">What made ${side(p)} better? Optional, pick any</span><div class="chips">${REASONS.map(r =>
@@ -362,7 +362,7 @@ function tally(rows){
 const counted = t => t.desk + t.same + t.claude;
 const pct = (n, of) => of ? Math.round(n/of*100) + "%" : "–";
 const SEGS = ["d2","d1","same","c1","c2"];
-// Diverging bar: center line = even split; Sent grows left, Claude grows right; each half spans 100% of votes.
+// Diverging bar: center line = even split; Writers grows left, Claude grows right; each half spans 100% of votes.
 function divbar(t, big){
   const n = counted(t);
   const w = k => n ? t[k]/n*50 : 0;
@@ -370,7 +370,7 @@ function divbar(t, big){
   const on = SEGS.filter(k => t[k]);
   const segs = on.map((k,j) => { const s = `<i class="${k} ${j===0?"first":""} ${j===on.length-1?"last":""}" style="left:${x}%;width:${w(k)}%" title="${LVL_LABEL[k]}: ${t[k]} (${pct(t[k],n)})"></i>`; x += w(k); return s; });
   return `<div class="divcell"><div class="div ${big?"big":""}" role="img" aria-label="${SEGS.map(k => `${LVL_LABEL[k]} ${t[k]}`).join(", ")}">${segs.join("")}<b class="mid"></b></div>
-    <small><span>Sent ${pct(t.desk,n)}</span><span>${t.same ? "Even " + pct(t.same,n) : ""}</span><span>Claude ${pct(t.claude,n)}</span></small></div>`;
+    <small><span>Writers ${pct(t.desk,n)}</span><span>${t.same ? "Even " + pct(t.same,n) : ""}</span><span>Claude ${pct(t.claude,n)}</span></small></div>`;
 }
 const legend = `<div class="legend">${SEGS.map(k => `<span><i class="sw ${k}"></i>${LVL_LABEL[k]}</span>`).join("")}</div>`;
 const pill = r => r ? `<span class="pill ${r[0]==="d"?"desk":r[0]==="c"?"claude":r} ${/2$/.test(r)?"lot":""}">${LVL_LABEL[r]}</span>` : `<span class="hint">–</span>`;
@@ -413,7 +413,7 @@ function renderDash(){
       <div class="section-h"><h3>Everyone</h3><button type="button" class="btn" id="refresh">Refresh</button></div>
       <p class="lede" style="margin:0">${people.length} ${people.length===1?"person has":"people have"} graded, ${finished} finished. Skipped stories don’t count.</p>
       <div class="score">
-        <div><strong>${pct(all.desk, counted(all))}</strong><span>${all.desk} picks for what was sent · ${all.d2} by a lot</span></div>
+        <div><strong>${pct(all.desk, counted(all))}</strong><span>${all.desk} picks for the writers · ${all.d2} by a lot</span></div>
         <div><strong>${pct(all.same, counted(all))}</strong><span>${all.same} called even</span></div>
         <div><strong>${pct(all.claude, counted(all))}</strong><span>${all.claude} picks for Claude · ${all.c2} by a lot</span></div>
       </div>
@@ -421,14 +421,14 @@ function renderDash(){
       ${legend}
     </section>
     ${byTeam.length ? `<section><div class="section-h"><h3>By team</h3><span class="hint">Faded rows have fewer than ${MIN_N} people</span></div>
-      <div class="axis"><span>← Preferred what was sent</span><span>Preferred Claude →</span></div>
+      <div class="axis"><span>← Preferred the writers</span><span>Preferred Claude →</span></div>
       <div class="rows">${byTeam.map(x => `<div class="row wide ${x.n<MIN_N?"thin":""}"><span class="n">${x.n}</span><span class="h">${esc(x.tm)}<small>${x.n} ${x.n===1?"person":"people"} · ${counted(x.t)} votes</small></span>${divbar(x.t)}</div>`).join("")}</div></section>` : ""}
     ${anyWhy ? `<section><div class="section-h"><h3>Why people picked a side</h3><span class="hint">Times each reason was given</span></div>
-      <div><div class="why head"><span class="l">For what was sent</span><span class="lab"></span><span class="r">For Claude</span></div>
+      <div><div class="why head"><span class="l">For the writers</span><span class="lab"></span><span class="r">For Claude</span></div>
       ${REASONS.map(r => { const a = why.desk[r]||0, b = why.claude[r]||0; return `<div class="why"><span class="l">${a}<i style="width:${a/wmax*80}%"></i></span><span class="lab">${esc(r)}</span><span class="r"><i style="width:${b/wmax*80}%"></i>${b}</span></div>`; }).join("")}</div></section>` : ""}
     <section>
       <div class="section-h"><h3>By story</h3><span class="hint">Click a story for names, reasons and notes</span></div>
-      <div class="axis"><span>← Preferred what was sent</span><span>Preferred Claude →</span></div>
+      <div class="axis"><span>← Preferred the writers</span><span>Preferred Claude →</span></div>
       <div class="rows">${STORIES.map((s,i) => { const ps = people.map(d => d.picks?.[s.id] ? {d, r:lvl(s, d.picks[s.id])} : null).filter(Boolean); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
         const notes = ps.filter(x => (x.d.notes?.[s.id]||"").trim()).length;
         return `<details class="xrow"><summary class="row wide ${n<MIN_N?"thin":""}"><span class="n">${two(i+1)}</span><span class="h">${esc(s.h)}<small>${n} ${n===1?"vote":"votes"}${sk?` · ${sk} skipped`:""}${notes?` · ${notes} ${notes===1?"note":"notes"}`:""}</small></span>${divbar(t)}</summary>
