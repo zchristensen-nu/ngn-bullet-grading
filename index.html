@@ -241,7 +241,7 @@ const two = n => String(n).padStart(2,"0");
 const state = { cur:0, picks:{}, notes:{}, done:false, mode:"grade", name:"", team:"" };
 let isOwner = false;
 // Votes go to a Google Sheet through its Apps Script web app (see SETUP.md).
-const SCRIPT_URL = "__SCRIPT_URL__";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyk-JT4bOIY9wq5NCzlIB0iuNOph_fBfCZE0WnHY7Y0KoCPe0dNU2hTj4rKtRf1Aws/exec";
 let team = null, teamErr = "", myKey = "";
 const gid = (() => { try{ let v = localStorage.getItem("grader-id"); if(!v){ v = crypto.randomUUID(); localStorage.setItem("grader-id", v); } return v; }catch(_){ return crypto.randomUUID(); } })();
 const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2,"0")).join("");
