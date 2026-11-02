@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NGN Daily Bullet Grading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap">
+<style>
+/* Layout: one story per screen. Two newsletter modules side by side (stacked on phones); clicking one picks it. A tick strip of 18 stories along the top. */
+:root{
+  --bg:#f6f6f4; --surface:#ffffff; --ink:#17181b; --muted:#62646b; --faint:#8b8d94;
+  --rule:#e2e2df; --rule-strong:#cfcfcb; --accent:#c8102e; --accent-ink:#a50d26; --wash:#fbeef0;
+  --tie:#5b6472; --tie-wash:#eef0f3; --ok:#2f6f4f;
+  --paper:#ffffff; --ink-soft:#2b2d31; --shadow:rgba(20,22,28,.08);
+  --sans:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111214; --surface:#18191c; --ink:#ececee; --muted:#a2a4ab; --faint:#7d7f86;
+  --rule:#2a2c30; --rule-strong:#3a3c41; --accent:#e0485c; --accent-ink:#ececee; --wash:#2a181c;
+  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111214; --surface:#18191c; --ink:#ececee; --muted:#a2a4ab; --faint:#7d7f86;
+  --rule:#2a2c30; --rule-strong:#3a3c41; --accent:#e0485c; --accent-ink:#ececee; --wash:#2a181c;
+  --tie:#a9b1be; --tie-wash:#22252a; --ok:#7cc4a0; --paper:#1b1c20; --ink-soft:#d6d7da; --shadow:rgba(0,0,0,.45); color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+.mono{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+
+/* Masthead */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--rule)}
+.top .wrap{display:flex;align-items:center;gap:var(--s5);padding-block:var(--s3);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:var(--s3);margin-right:auto}
+.brand b{font-weight:600;font-size:15px;letter-spacing:-.01em}
+.brand span{color:var(--muted)}
+.ticks{display:flex;gap:3px;align-items:center}
+.ticks button{width:14px;height:22px;border:0;padding:0;background:none;display:grid;place-items:end center}
+.ticks button i{display:block;width:100%;height:6px;background:var(--rule-strong);border-radius:1px;transition:height .15s,background .15s}
+.ticks button.done i{background:var(--ink)}
+.ticks button.on i{height:16px}
+.ticks button.on:not(.done) i{background:var(--accent)}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);min-width:4.5em;text-align:right}
+
+/* Intro */
+.intro{padding-block:var(--s7) var(--s5)}
+.intro h1{font-weight:300;font-size:clamp(34px,5.4vw,56px);line-height:1.04;letter-spacing:-.025em;margin:0 0 var(--s4);text-wrap:balance;max-width:16ch}
+.intro p{color:var(--muted);max-width:60ch;margin:0}
+.intro .rule{width:56px;height:3px;background:var(--accent);margin-bottom:var(--s5)}
+
+/* Story */
+.story{padding-block:var(--s5) var(--s8)}
+.slug{display:flex;gap:var(--s4);align-items:baseline;flex-wrap:wrap;color:var(--muted);margin-bottom:var(--s3)}
+.slug .n{color:var(--ink);font-variant-numeric:tabular-nums}
+.slug a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule-strong)}
+.slug a:hover{color:var(--ink);border-color:var(--ink)}
+.story > h2{font-weight:400;font-size:clamp(24px,3.3vw,34px);line-height:1.18;letter-spacing:-.015em;margin:0 0 var(--s6);text-wrap:balance;max-width:30ch}
+
+/* Two newsletter story modules, rendered the way the daily lays them out */
+.proofs{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+@media (max-width:760px){.proofs{grid-template-columns:1fr}}
+.proof{min-width:0;display:flex;flex-direction:column;gap:var(--s3)}
+.proof > header{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);min-height:24px}
+.letter{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.1em;color:var(--muted)}
+.letter b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border:1px solid var(--rule-strong);border-radius:50%;color:var(--ink);font-weight:500;letter-spacing:0}
+.proof.picked .letter b{background:var(--accent);border-color:var(--accent);color:#fff}
+.verdict-tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:2px;background:var(--wash);color:var(--accent-ink)}
+.proof.tied .verdict-tag{background:var(--tie-wash);color:var(--tie)}
+/* The story module is written to email limits: one ~600px column, system font stacks
+   (Georgia for headlines, since Gmail and Outlook drop web fonts), native bullets,
+   no shadows or rounded corners, plain text link for the call to action. */
+.email{--e-ink:#1a1a1a;--e-body:#2e2e2e;--e-muted:#6e6e6e;--e-rule:#e4e4e4;
+  background:#ffffff;color:var(--e-ink);border:1px solid var(--rule);max-width:600px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;transition:outline-color .15s}
+.proof.picked .email{outline:2px solid var(--accent);outline-offset:4px}
+.proof.tied .email{outline:2px solid var(--tie);outline-offset:4px}
+.email figure{margin:0;aspect-ratio:2/1;background:var(--e-rule);overflow:hidden}
+.email img{display:block;width:100%;height:100%;object-fit:cover;max-width:100%}
+.email .body{padding:28px 32px 32px;display:flex;flex-direction:column;flex:1;font-family:Helvetica,Arial,sans-serif}
+.email h3{margin:0;font-family:Georgia,"Times New Roman",Times,serif;font-weight:400;font-size:26px;line-height:1.22;letter-spacing:-.005em;color:var(--e-ink);text-wrap:balance}
+.email .by{margin:10px 0 0;font-size:13px;line-height:1.4;color:var(--e-muted)}
+.email ul{margin:22px 0 0;padding:0 0 0 20px;list-style:disc}
+.email li{font-size:16px;line-height:1.55;color:var(--e-body);padding-left:2px}
+.email li+li{margin-top:12px}
+.email li::marker{color:var(--e-ink)}
+.email li b{font-weight:700;color:var(--e-ink)}
+.read{margin-top:auto;padding-top:26px;font-size:15px;font-weight:700;color:var(--e-ink);text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;align-self:flex-start}
+.read:hover{text-decoration-thickness:2px}
+@media (max-width:560px){.email .body{padding:22px 20px 26px}.email h3{font-size:23px}}
+.src{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;padding-top:var(--s1)}
+.src.claude{color:var(--ink)}
+
+.proof.choosable{cursor:pointer}
+.proof.choosable:not(.picked):hover .email{outline:2px solid var(--rule-strong);outline-offset:4px}
+.choose{margin-top:var(--s3);width:100%;max-width:600px;align-self:center;padding:14px 18px;border:1.5px solid var(--ink);border-radius:3px;background:var(--surface);color:var(--ink);font-weight:600;font-size:16px;transition:background .12s,color .12s}
+.proof.choosable:not(.picked):hover .choose{background:var(--ink);color:var(--bg)}
+.choose[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.even{display:flex;justify-content:center;margin-top:var(--s4)}
+.even button{border:0;background:none;color:var(--muted);font-size:14.5px;text-decoration:underline;text-underline-offset:3px;padding:var(--s2)}
+.even button:hover{color:var(--ink)}
+.even button[aria-pressed="true"]{color:var(--ink);font-weight:600;text-decoration:none}
+.top .wrap{row-gap:var(--s2)}
+@media (max-width:560px){.top .wrap{gap:var(--s2) var(--s4)}.brand{margin-right:0;flex:1 0 100%}.ticks{flex:1;min-width:0}.ticks button{flex:1;width:auto}}
+#howto{border:0;border-radius:4px;padding:40px 40px 32px;max-width:min(460px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 24px 60px -20px rgba(0,0,0,.45)}
+#howto::backdrop{background:rgba(12,13,16,.55)}
+#howto h2{margin:0 0 var(--s3);font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:30px;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+#howto p{margin:0 0 var(--s5);color:var(--muted)}
+
+.note{margin-top:var(--s4);display:flex;flex-direction:column;gap:var(--s2)}
+.note label{color:var(--muted)}
+.note textarea{width:100%;min-height:64px;resize:vertical;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:var(--s3)}
+.note textarea:focus{border-color:var(--rule-strong);outline:none}
+
+.nav{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s5);flex-wrap:wrap}
+.btn{border:1px solid var(--rule-strong);background:var(--surface);border-radius:3px;padding:10px 16px;font-weight:500}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:disabled{opacity:.35;cursor:default}
+.btn:disabled{cursor:default}
+.status{margin-left:auto;color:var(--faint);font-size:13px}
+
+/* Finish + results */
+.finish{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:3px;padding:var(--s6);display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s6)}
+.finish h3{margin:0;font-weight:400;font-size:24px;letter-spacing:-.01em}
+.finish p{margin:0;color:var(--muted);max-width:60ch}
+.results{padding-block:var(--s6) var(--s8);display:flex;flex-direction:column;gap:var(--s7)}
+.results h2{font-weight:300;font-size:clamp(30px,4.6vw,46px);line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:20ch}
+.score{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--rule)}
+.score div{padding:var(--s4) var(--s4) var(--s4) 0;display:flex;flex-direction:column;gap:2px}
+.score div+div{padding-left:var(--s4);border-left:1px solid var(--rule)}
+.score strong{font-weight:300;font-size:44px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.score span{color:var(--muted)}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s4);border-bottom:1px solid var(--rule);padding-bottom:var(--s2);margin-bottom:var(--s2);flex-wrap:wrap}
+.section-h h3{margin:0;font-weight:600;font-size:15px}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:2.2em minmax(0,1fr) minmax(160px,260px);gap:var(--s4);align-items:center;padding-block:var(--s3);border-bottom:1px solid var(--rule)}
+.row .n{font-family:var(--mono);font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.row .h{min-width:0;font-size:15px;line-height:1.35}
+.row .h button{border:0;background:none;padding:0;text-align:left;text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:3px}
+.pill{justify-self:end;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:2px;white-space:nowrap}
+.pill.desk{background:var(--tie-wash);color:var(--ink)}
+.pill.claude{background:var(--wash);color:var(--accent-ink)}
+.pill.same{background:none;border:1px solid var(--rule-strong);color:var(--muted)}
+.bar{display:flex;height:10px;border-radius:2px;overflow:hidden;background:var(--rule)}
+.bar i{display:block;height:100%}
+.bar .d{background:var(--ink)} .bar .t{background:var(--rule-strong)} .bar .c{background:var(--accent)}
+.barcell{display:flex;flex-direction:column;gap:4px}
+.barcell small{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between}
+.legend{display:flex;gap:var(--s4);color:var(--muted);font-size:13px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.empty{color:var(--muted);padding-block:var(--s4)}
+@media (max-width:560px){.row{grid-template-columns:2em minmax(0,1fr)}.row .pill,.row .barcell{grid-column:2;justify-self:start}.barcell{width:100%}.score strong{font-size:34px}}
+.toplink{border:1px solid var(--rule-strong);background:none;border-radius:3px;padding:5px 10px;font-size:13px;font-weight:600;color:var(--ink)}
+.toplink:hover{border-color:var(--ink)}
+#who{border-color:transparent;color:var(--muted);font-weight:500}
+#admin[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#howto form{display:flex;flex-direction:column;gap:var(--s2)}
+#howto label{font-size:13px;font-weight:600}
+#howto input{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--rule-strong);border-radius:3px;background:var(--surface);color:var(--ink)}
+#howto input:focus{outline:2px solid var(--ink);outline-offset:1px}
+#howto .err{margin:0;color:var(--accent-ink);font-size:13px}
+#howto button{margin-top:var(--s3);align-self:flex-start}
+.lede{margin:var(--s3) 0 0;color:var(--muted)}
+.results > section{display:flex;flex-direction:column;gap:var(--s4)}
+.you{padding-bottom:var(--s5);border-bottom:1px solid var(--ink)}
+.hint{font-size:13px;color:var(--muted)}
+.team{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule-strong);border-radius:2px;padding:1px 6px;vertical-align:2px}
+.linkish{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:3px}
+.pill.skip{background:none;border:1px dashed var(--rule-strong);color:var(--faint)}
+.verdict-tag.skip{background:var(--tie-wash);color:var(--muted)}
+.proof.skipped .email{opacity:.55}
+.even{gap:var(--s2);align-items:center;flex-wrap:wrap;color:var(--faint)}
+#howto .teams{border:0;margin:var(--s3) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
+#howto legend{font-size:13px;font-weight:600;padding:0;margin-bottom:var(--s2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;cursor:pointer}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip span{display:inline-block;padding:7px 12px;border:1px solid var(--rule-strong);border-radius:999px;font-size:14px;font-weight:500;transition:background .12s,border-color .12s}
+.chip:hover span{border-color:var(--ink)}
+.chip input:checked + span{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.xrow{border-bottom:1px solid var(--rule)}
+.xrow > summary{list-style:none;cursor:pointer;border-bottom:0}
+.xrow > summary::-webkit-details-marker{display:none}
+.xrow > summary:hover .h{text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:3px}
+.row .h small{display:block;margin-top:2px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xbody{padding:0 0 var(--s4) calc(2.2em + var(--s4));overflow-x:auto}
+.ptable{width:100%;border-collapse:collapse;font-size:14px}
+.ptable th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:6px 12px 6px 0;border-bottom:1px solid var(--rule)}
+.ptable td{padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.ptable td:first-child{white-space:nowrap}
+.ptable td:last-child{min-width:16em;color:var(--ink-soft)}
+.ptable .pill{justify-self:auto}
+@media (max-width:560px){.xbody{padding-left:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+[hidden]{display:none!important}
+img{max-width:100%}
+</style>
+
+<header class="top gutter"><div class="wrap">
+  <div class="brand"><b>NGN Daily</b><span class="mono">Bullet grading</span></div>
+  <nav class="ticks" id="ticks" aria-label="Stories"></nav>
+  <span class="count mono" id="count"></span>
+  <button type="button" class="toplink" id="who" hidden></button>
+  <button type="button" class="toplink" id="admin" hidden>Results</button>
+</div></header>
+
+<main class="gutter"><div class="wrap">
+  <section id="view"></section>
+</div></main>
+
+<dialog id="howto" aria-labelledby="howto-h">
+  <h2 id="howto-h">Click the one you like more.</h2>
+  <p>You’ll see two versions of the same newsletter story, side by side. Only the bullets differ.</p>
+  <form id="howto-form" novalidate>
+    <label for="grader-name">Your name</label>
+    <input id="grader-name" name="grader-name" autocomplete="name" required placeholder="First and last name">
+    <p class="err" id="name-err" hidden>Add your name so we know whose picks these are.</p>
+    <fieldset class="teams"><legend>Your team</legend><div class="chips"><label class="chip"><input type="radio" name="team" value="Editor"><span>Editor</span></label><label class="chip"><input type="radio" name="team" value="Writer"><span>Writer</span></label><label class="chip"><input type="radio" name="team" value="Digital"><span>Digital</span></label><label class="chip"><input type="radio" name="team" value="Media Relations"><span>Media Relations</span></label><label class="chip"><input type="radio" name="team" value="Social Media"><span>Social Media</span></label><label class="chip"><input type="radio" name="team" value="Photo/Video"><span>Photo/Video</span></label><label class="chip"><input type="radio" name="team" value="Other"><span>Other</span></label></div></fieldset>
+    <p class="err" id="team-err" hidden>Pick the team you’re on.</p>
+    <button type="submit" class="btn primary" id="howto-ok">Start</button>
+  </form>
+</dialog>
+
+<script>
+const STORIES = [{"id": 316747, "h": "How Halloween became a $13 billion American extravaganza", "url": "https://news.northeastern.edu/2026/10/28/why-is-halloween-so-popular-in-america/", "v": [[{"label": "An American extravaganza:", "text": "This year, U.S. consumers are expected to spend $13.5 billion on Halloween, data reveals."}, {"label": "Halloween’s spooky origins:", "text": "The start of Halloween can be traced back to an ancient holiday marked by the Celts."}, {"label": "Rapid commercial growth:", "text": "Experts reveal how this beloved tradition took off in America in a relatively short period of time."}], [{"label": "It began as a night of spirits:", "text": "More than 2,000 years ago, Celts marked Samhain, when the dead were thought to roam the Earth, with masks and massive bonfires."}, {"label": "How did it cross the Atlantic?", "text": "Irish and Scottish immigrants brought it over in the 19th century, then swapped carved turnips for more plentiful native pumpkins."}, {"label": "Why did it take off here?", "text": "It filled an open retail slot between back-to-school and Christmas, a Northeastern marketing professor says, and candy makers built an ecosystem around it."}]], "d": 0, "by": "Jonathan Chadwick", "alt": "Three pumpkins, one carved with the face of a Jack-O-Lantern, in front of an orange background."}, {"id": 316993, "h": "This grad turned a gift of earrings into a business helping artisans in Latin America", "url": "https://news.northeastern.edu/2026/10/28/nouf-alawadhi-coya-jewelry/", "v": [[{"label": "A single mother had stopped making jewelry:", "text": "Nouf Alawadhi, a 2016 Northeastern graduate, bought the Peruvian designer's leftover pieces to sell to friends and family."}, {"label": "They sold out:", "text": "Today she works with almost a dozen designers across Latin America through her online company, Coya."}, {"label": "Where does the money go?", "text": "Part of the sales funds projects such as a farm that feeds 500 children at an orphanage in Peru."}], [{"label": "Who is she?", "text": "Nouf Alawadhi taught at an orphanage during a trip to Peru and wanted a way to give back."}, {"label": "How it started:", "text": "A pair of earrings that she wanted to give as a gift became the key to giving back, inspiring Alawadhi to start a business that sells jewelry from artisans in Latin America and devotes a portion of sales to community and business development projects."}, {"label": "How it’s going:", "text": "Alawadhi is being recognized for her entrepreneurialism and social commitment with a 2026 Women Who Empower Innovator Award."}]], "d": 1, "by": "Cyrus Moulton", "alt": "Nouf Alawadhi sits on a woven blanket outdoors, smiling as she talks with a group of children and adults gathered around a pile of children’s backpacks."}, {"id": 316069, "h": "We know exercise improves brain health. Now we know how", "url": "https://news.northeastern.edu/2026/10/28/how-exercise-improves-focus-research/", "v": [[{"label": "Exercise and the brain:", "text": "Researchers know that regular exercise benefits the brain by improving neural connections and changing brain structure, but the benefits of short bouts of exercise are unexplained."}, {"label": "What’s new?", "text": "Research from Northeastern University finds the system that regulates the body’s fight-or-flight response is a pathway connecting exercise and improved cognition."}, {"label": "For all ages:", "text": "The research was conducted with children, but researchers believe similar results could be applied to adults."}], [{"label": "Fight or flight?", "text": "In a study of 104 children, a brisk 20-minute walk briefly revved up the body's stress-response system, then calmed it below where it started."}, {"label": "Did it help?", "text": "After the walk, the kids were more consistent and slightly more accurate on tests of focus."}, {"label": "Walk or study?", "text": "A walk before a big test likely helps if you've already learned the material, but not if you're unprepared and stressed, researchers say."}]], "d": 0, "by": "Cyrus Moulton", "alt": "Silhouettes of two children running across a grassy hilltop at sunset."}, {"id": 317091, "h": "How vulnerable are the 2026 midterms to cyberattacks?", "url": "https://news.northeastern.edu/2026/10/26/2026-midterm-elections-cyberattacks/", "v": [[{"label": "What is the issue?", "text": "Foreign actors have repeatedly targeted U.S. elections, and evolving cyber threats — including those enabled by AI — raising questions about how well voting systems can withstand attacks."}, {"label": "What protects the vote?", "text": "The decentralized nature of U.S. elections makes a nationwide cyberattack more difficult, while paper records allow officials to verify electronic tallies and conduct recounts."}, {"label": "What are the vulnerabilities?", "text": "Cuts at Center for Democracy & Technology could weaken information-sharing among election officials, even as experts say years of security improvements and continued scrutiny of voting systems offer reasons for confidence."}], [{"label": "Hackers have gotten in before:", "text": "Russian actors breached state voter registration systems in 2016, though federal investigators found no altered vote totals."}, {"label": "So why aren't experts panicking?", "text": "Each state runs its own software and machines, and that patchwork \"actually does provide defense,\" says a Northeastern security professor."}, {"label": "What worries them now?", "text": "The federal agency that helps election officials share threat warnings has lost more than 1,000 staff."}]], "d": 0, "by": "Tanner Stening", "alt": "A person with a dark skin tone and glasses is hunched over a voting booth casting a ballot."}, {"id": 316959, "h": "Boston’s ‘Family & Friends Weekend’ draws loved ones from near and far", "url": "https://news.northeastern.edu/2026/10/23/family-and-friends-weekend-2026/", "v": [[{"label": "\"I really miss them\":", "text": "First-year student Joanna Totey planned to show her mother and sister the Freedom Trail and Beacon Hill's Acorn Street."}, {"label": "What else is on the schedule?", "text": "More than 4,200 people registered for three days of Fenway Park tours, a cappella shows and s'mores under the stars."}, {"label": "The verdict from Lake Como?", "text": "A student rower's parents, visiting from Italy, say they love how the campus blends right into the city around it."}], [{"label": "It's fall in Boston:", "text": "That means many things, including Family & Friends Weekend, a mid-term opportunity for loved ones to visit their students."}, {"label": "What's in store?", "text": "Over three days, attendees can take tours of Fenway Park, be dazzled by an a cappella performance, hear from their student's college or program and more."}, {"label": "A popular event:", "text": "More than 4,200 students, family members and friends registered for the fun."}]], "d": 1, "by": "Hannah Morse", "alt": "Gigi Woo and Cheryl Au smile for a phone selfie in front of a fall display of pumpkins, gourds, cornstalkers and orange leaves. A scarecrow wearing a Northeastern sweatshirt is also behind them."}, {"id": 317307, "h": "Apple bites into the touch-screen tech market with launch of new Macbook", "url": "https://news.northeastern.edu/2026/10/29/apple-macbook-pro-touch-screen/", "v": [[{"label": "For years, Apple said no:", "text": "Steve Jobs once called laptops you could touch “ergonomically terrible,” and the company long told customers to buy an iPad instead."}, {"label": "So why now?", "text": "A Northeastern marketing professor says Apple is courting designers, photographers, musicians and other creative professionals."}, {"label": "Will anyone be impressed?", "text": "He expects less fanfare than for the new folding iPhone, because many people already assumed Macs could do this."}], [{"label": "What’s new?", "text": "Apple announced its first touch screen Macbook Pro on Wednesday."}, {"label": "Who’s it for?", "text": "The company is targeting creatives with the new device."}, {"label": "They didn’t already have these?", "text": "No, this is a first for Apple, likely in a move to target its high-end customers base, Northeastern experts say."}]], "d": 1, "by": "Cesareo Contreras", "alt": "Two hands touch a laptop’s screen, playing an on-screen piano keyboard in music production software."}, {"id": 316275, "h": "This grad’s company helps drugs get developed faster and cheaper", "url": "https://news.northeastern.edu/2026/10/26/flow-cytometry-services-sauvebio/", "v": [[{"label": "Where it all started:", "text": "Hannah Sheehan Sauve learned a high-precision cell analysis technique while getting her Ph.D. in biology at Northeastern."}, {"label": "What does it do?", "text": "Flow cytometry is a way to investigate a range of drug impacts on the smallest parts of a cell, helping researchers validate their product."}, {"label": "SauveBio helps startups:", "text": "Graduate Hannah Sheehan Sauve started the company offering flow cytometry services to other companies as an 'external extension of their research team.'"}], [{"label": "Under the northern lights:", "text": "Hannah Sheehan Sauve took the aurora over Canada's Lake Louise as her sign to launch SauveBio with her now-husband."}, {"label": "What does it do?", "text": "Flow cytometers, laser instruments that study cells, cost up to $600,000, so SauveBio runs the experiments and interprets the results for biotech startups."}, {"label": "Where did she learn it?", "text": "In a Northeastern Ph.D. lab, where her adviser says she couldn't be dragged away from the machine."}]], "d": 0, "by": "Hannah Morse", "alt": "Hannah Suave wearing a lab coat, safety glasses, and blue gloves reaching into a glass-fronted stainless steel lab instrument, her reflection visible in the glass."}, {"id": 317168, "h": "Custom Ford Mustang is Northeastern Seattle’s speediest research platform", "url": "https://news.northeastern.edu/2026/10/27/self-driving-car-sensors-research/", "v": [[{"label": "10 gigabytes a minute:", "text": "The cameras, LiDAR and other sensors on Northeastern’s Ford Mustang slurp up navigation data at a hefty clip as it cruises along the Seattle streets."}, {"label": "From robotics class to Rivian:", "text": "Master’s student Vittoria Bitton, who secured a senior software engineering job at Rivian before her December graduation, mentors her robotics classmates on the Mustang’s sensor array."}, {"label": "Mistakes as curriculum:", "text": "Elvis Madiba, a former software engineer, says Li’s classroom culture of learning-through-error has him dreaming of building a similar teaching model back home in Kenya."}], [{"label": "10 gigabytes a minute:", "text": "That's how fast the electric SUV's cameras, LiDAR, radar and GPS soak up road data that students use to build their own navigation algorithms."}, {"label": "Can it drive itself?", "text": "Not yet, but professor Xian Li and his students are hacking its steering and controls to push it closer to full autonomy."}, {"label": "So when can you nap on the highway?", "text": "A professor explains why truly self-driving cars are still more than a decade away."}]], "d": 0, "by": "Peter Rubinstein", "alt": "A person wearing sunglasses sits behind the wheel of a white SUV with black wave graphics, a sensor rack mounted on its roof, and a red Northeastern “N” and the words “Autonomous Vehicle Research Platform” on the doors."}, {"id": 316007, "h": "This professor seeks to power modern society with better, safer batteries", "url": "https://news.northeastern.edu/2026/10/29/solid-state-battery-research-award/", "v": [[{"label": "Ever wonder why airlines ban some devices from checked bags?", "text": "Many lithium-ion batteries have a liquid core that can overheat and catch fire, says Northeastern engineer Hongli \"Julie\" Zhu."}, {"label": "Her fix?", "text": "Zhu's prototype swaps the liquid for a solid ceramic core that she says doesn't catch fire."}, {"label": "Is anyone taking notice?", "text": "The American Chemical Society picked Zhu for its 2027 Research Excellence Award in Electrochemical Energy Storage."}], [{"label": "Who is she?", "text": "Hongli \"Julie\" Zhu, an associate professor in the College of Engineering, originally wanted to be a medical doctor until her curiosity led her to science."}, {"label": "What's the issue?", "text": "Batteries are key to powering much of modern society, but many lithium-ion batteries contain an electrolyte liquid core that can sometimes catch fire."}, {"label": "Better, safer power:", "text": "Zhu wants to replace these batteries with the next generation of power storage, using her own solid-state design that won't overheat."}]], "d": 1, "by": "Rich McKay", "alt": "Hongli Zhu wearing a lab coat and black gloves connects wired battery cells at a workbench beside shelves of battery testing equipment lined with clips and cables."}, {"id": 316769, "h": "Is it anxiety, depression or something else? This research looks beyond the medical book definitions", "url": "https://news.northeastern.edu/2026/10/26/anxiety-depression-subtypes-treatment-research/", "v": [[{"label": "What is the new study?:", "text": "“Anxiety and depression subtype and their psychotherapy response,” was published recently in the peer-reviewed international medical journal, Psychological Medicine."}, {"label": "What does it say?:", "text": "It postulates that a new, holistic approach could help patients feel less distress, less impairment and bring them a higher quality of life."}, {"label": "How many people in the U.S. could it help?:", "text": "The National Institute of Mental Health reports that about 8.8% or 22.5 million American adults suffer from clinical depression and about 5% or 6.8 million Americans suffer from generalized anxiety disorder."}], [{"label": "One diagnosis, one treatment?", "text": "That has long been the norm in therapy, but Northeastern psychologist Donald Robinaugh says it can miss symptoms like a racing fight-or-flight response."}, {"label": "What did his team find?", "text": "Among more than 33,600 U.S. adults seeking therapy, many had symptoms tied to several disorders at once."}, {"label": "What could change?", "text": "Treating each person's specific symptoms could mean less distress and a better quality of life, he says."}]], "d": 0, "by": "Rich McKay", "alt": "Person in a striped shirt with eyes closed against a blue background, with motion blur creating a repeated image effect."}, {"id": 317278, "h": "Campaign ad spending is soaring. What do the big bucks actually buy you?", "url": "https://news.northeastern.edu/2026/10/28/campaign-ad-spending-is-soaring/", "v": [[{"label": "About 1%:", "text": "That's how much research suggests ads lift turnout, says Northeastern's Katherine Haenschen, though in a close race that can be enough to matter."}, {"label": "And the attack ads?", "text": "Many aren't meant to win over the other side's voters, a marketing professor says, but to keep them home on Election Day."}], [{"label": "Big spending:", "text": "Spending on political campaign advertisements is projected to hit a record $11.6 billion in 2026, as candidates and outside groups pour money into races across the country."}, {"label": "Will it make a difference?", "text": "Research suggests political ads can boost name recognition and sometimes sway voters, but their persuasive effects are often modest and difficult to measure. With so much ad money flooding the airwaves, experts are questioning whether campaigns are reaching new voters or simply adding to the noise."}]], "d": 1, "by": "Tanner Stening", "alt": "Elon Musk is dressed in a suit and tie, pumping both fists on stage at a political event."}, {"id": 316839, "h": "Northeastern research shows where US residents might find consensus with AI", "url": "https://news.northeastern.edu/2026/10/23/trust-in-ai-survey/", "v": [[{"label": "What do both parties want?", "text": "Nearly two-thirds of Republicans and Democrats support job retraining to help workers gain the skills for AI-heavy jobs."}, {"label": "Where do they split?", "text": "Trust in AI companies: independents are the most wary, and Republicans are divided down the middle, a survey of more than 38,000 people found."}, {"label": "Young adults use AI the most:", "text": "But only 30% of 18- to 24-year-olds trust AI companies, with many fearing the technology will wipe out entry-level jobs."}], [{"label": "What's new?", "text": "A new Northeastern University survey provides insights into how U.S. residents with different political affiliations feel about AI and data centers."}, {"label": "What did the survey find?", "text": "While survey respondents were divided on AI's usefulness, the majority agreed that workers should be trained to use the technology."}, {"label": "What's next?", "text": "The research group will soon publish a report on its findings based on how AI has influenced or changed hiring practices."}]], "d": 1, "by": "Cesareo Contreras", "alt": "A person standing at a cart at the end of a narrow aisle between rows of server racks filled with colored cables, lit by a bright blue-white glow."}, {"id": 317351, "h": "Probe in Spain train crash zeroes in on mechanical and human shortfalls", "url": "https://news.northeastern.edu/2026/10/29/spain-train-crash-safety/", "v": [[{"label": "Through a red signal:", "text": "After a computer outage, a Madrid control center told one train to keep going, and it struck another train stopped on the line."}, {"label": "Not the first this year:", "text": "At least 69 people died, months after track defects caused a deadly derailment in southern Spain."}, {"label": "So are trains still safe?", "text": "A Northeastern transport expert explains why he says rail remains one of the safest ways to travel in Europe."}], [{"label": "A country in mourning:", "text": "Two trains collided on Wednesday in the Castilla-La Mancha region, killing 69 people and injuring over 100."}, {"label": "Another rail disaster:", "text": "It’s Spain’s second major train crash of the year – prompting safety concerns over rail systems and infrastructure."}, {"label": "Is train travel safe?", "text": "A Northeastern professor reveals if it’s still advisable to travel by train in Europe."}]], "d": 1, "by": "Jonathan Chadwick", "alt": "Overhead view of rows of sleek white high-speed trains parked side by side on empty platforms, with tall dark columns casting long shadows across the station floor."}, {"id": 316254, "h": "How studying blueberries led to an AI-powered diagnostic tool for Parkinson’s", "url": "https://news.northeastern.edu/2026/10/27/parkinsons-treatment-ai-tool/", "v": [[{"label": "From blueberries to AI tool:", "text": "Bronwyn Bridges learned of a challenge while studying antioxidant power of fruit: there weren't many neurology specialists for people in rural Canada."}, {"label": "PRIMS solution:", "text": "It's an AI-powered diagnostic tool to help clinicians assess the progression of Parkinson's disease."}, {"label": "Broad access:", "text": "Patients can guide themselves through the assessment, with rural communities or mobility issues in mind."}], [{"label": "Long waitlists, or no doctor at all:", "text": "In rural Newfoundland and Labrador, Bronwyn Bridges found few neurology specialists for people living with Parkinson's disease."}, {"label": "How does it work?", "text": "Her tool uses 3D imaging to score a patient's speech, balance, tremors and gait in about 11 minutes."}, {"label": "Her co-founder?", "text": "Gord Genge, who was diagnosed with Parkinson's in 2019 and shared his own frustration with getting to see a specialist."}]], "d": 0, "by": "Hannah Morse", "alt": "Bronwyn Bridges, dressed in bright red, poses for a portrait."}, {"id": 316909, "h": "Northeastern grad looks for love on ‘Love Is Blind’", "url": "https://news.northeastern.edu/2026/10/23/stew-love-is-blind/", "v": [[{"label": "Is love blind?", "text": "Northeastern graduate Scott Stewart was a contestant on the reality TV dating show, this year set in Boston."}, {"label": "In the public eye:", "text": "Now that the series is airing on Netflix, he's reliving the experience."}, {"label": "Lessons learned:", "text": "Stewart reflected on the experience and whether he still wants to get married."}], [{"label": "Meet Scott \"Stew\" Stewart:", "text": "The SharkNinja engineering director got engaged on the show's Boston season, but the engagement ended after the couple met in person."}, {"label": "Lesson learned?", "text": "Sarcasm doesn't play on reality TV, and \"maybe a proposal is not the best time for jokes,\" Stewart says."}, {"label": "Still ready to marry?", "text": "He says he's \"absolutely committed\" to finding the one, and explains why bachelor life has lost its luster."}]], "d": 0, "by": "Hannah Morse", "alt": "Scott Stewart 'Stew' wearing a dark blazer and lavender shirt smiles broadly in front of shelves of amber wine glasses and blue plates."}, {"id": 312963, "h": "Her co-op in Greece taught this student about modern slavery", "url": "https://news.northeastern.edu/2026/10/23/co-op-greece-lessons-in-modern-slavery/", "v": [[{"label": "Slavery isn't only history:", "text": "Some 49.6 million people were living in conditions that qualify as modern slavery in 2021, a joint international report found."}, {"label": "What does it look like now?", "text": "At an Athens think tank, Leonie Ruehe researched one red flag: employers who keep workers' passports and wages."}], [{"label": "Where did she work?", "text": "Leonie Ruehe, a Northeastern University student interested in global affairs, was drawn to a co-op at a think tank in Greece that conducts research into modern slavery."}, {"label": "What issues did she tackle?", "text": "Her work examined labor conditions in agriculture and other informal sectors, where workers are more likely to face exploitation and lack formal labor protections, as well as the challenges of monitoring supply chains beyond the European Union."}]], "d": 1, "by": "Tanner Stening", "alt": "A young woman with long, wavy blonde hair wearing a white cardigan works on a computer."}, {"id": 308480, "h": "Northeastern London students inspire eyewear company with ‘fresh ideas’ for US expansion", "url": "https://news.northeastern.edu/2026/10/26/pop-specs-dragons-den-students/", "v": [[{"label": "A food truck for glasses?", "text": "Rather than pay steep department-store fees, one student pitched a mobile shop to show off the brand's 20-minute prescription glasses."}, {"label": "Why Miami?", "text": "Another student argued the city's arts scene and flamboyant atmosphere suit the brand better than New York or Los Angeles."}], [{"label": "Included in their eye-popping ideas:", "text": "One student proposed that rather than pay expensive fees to set up concessions in U.S. department stores, Pop Specs could enter the American market using a mobile eyewear store modeled on a food truck."}, {"label": "Location, Location, Location:", "text": "Another student suggested the company consider Miami as a location to target, because Florida's second most populous city has an arts scene and flamboyant atmosphere that suits Pop Specs."}]], "d": 1, "by": "Matthew Ponsford", "alt": "A student holds a pair of eyeglasses up to the camera, with a small metal mechanism magnified through one lens and their smiling face blurred behind the frames."}, {"id": 316730, "h": "Why do people self-injure? It may be about mind-body boundaries", "url": "https://news.northeastern.edu/2026/10/27/why-do-people-self-harm/", "v": [[{"label": "A surprising link:", "text": "Self-injury may be tied to something people rarely question — how separate your mind feels from your body."}, {"label": "Uncertainty hurts:", "text": "Researchers suggest self-injury may give otherwise hard-to-identify emotional pain a concrete, recognizable form."}, {"label": "Finding a way in:", "text": "Understanding that struggle could help therapists reach patients who find it difficult to explain what they’re going through."}], [{"label": "It doesn't compute:", "text": "Inflicting physical pain to ease emotional pain affects as many as one in 5 adolescents worldwide, and even psychologists find it puzzling."}, {"label": "What sets them apart?", "text": "People who hurt themselves more often tended to see their feelings as made of the same stuff as their flesh, a new survey found."}, {"label": "Can that help?", "text": "Northeastern psychologist Iris Berent says it could guide clinicians in helping patients tell bodily signals from emotions and name what they feel."}]], "d": 0, "by": "Katya Poltorak", "alt": "A figure with long dark hair sits curled up, knees to chest and head bowed, as green vines grow up and around their body under a pale full moon, with a golden butterfly and falling leaves against a deep blue night sky."}];
+const N = STORIES.length;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const two = n => String(n).padStart(2,"0");
+
+const state = { cur:0, picks:{}, notes:{}, done:false, mode:"grade", name:"", team:"" };
+let isOwner = false;
+// Votes go to a Google Sheet through its Apps Script web app (see SETUP.md).
+const SCRIPT_URL = "__SCRIPT_URL__";
+let team = null, teamErr = "", myKey = "";
+const gid = (() => { try{ let v = localStorage.getItem("grader-id"); if(!v){ v = crypto.randomUUID(); localStorage.setItem("grader-id", v); } return v; }catch(_){ return crypto.randomUUID(); } })();
+const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2,"0")).join("");
+const PICK_LABEL = {desk:"Sent", claude:"Claude", same:"Even", skip:"Skipped"};
+
+// pick is "A" | "B" | "same"; turn it into whose bullets won
+const pref = (s, p) => p === "skip" ? "skip" : p === "same" ? "same" : (["A","B"].indexOf(p) === s.d ? "desk" : "claude");
+const graded = () => STORIES.filter(s => state.picks[s.id]).length;
+
+function renderTicks(){
+  $("ticks").innerHTML = STORIES.map((s,i) =>
+    `<button type="button" data-go="${i}" class="${state.picks[s.id]?"done":""} ${state.mode==="grade"&&i===state.cur?"on":""}" aria-label="Story ${i+1}${state.picks[s.id]?", graded":""}"><i></i></button>`).join("");
+  $("count").textContent = `${graded()} / ${N}`;
+}
+
+function list(bs){ return bs.map(b => `<li><b>${esc(b.label)}</b> ${esc(b.text)}</li>`).join(""); }
+
+function renderGrade(){
+  const s = STORIES[state.cur], p = state.picks[s.id];
+  const card = (k, i) => {
+    const picked = p === k, tied = p === "same", skipped = p === "skip";
+    return `<article class="proof ${picked?"picked":""} ${tied?"tied":""} ${skipped?"skipped":""} ${state.done?"":"choosable"}" ${state.done?"":`data-pick="${k}"`} aria-label="Version ${k}">
+      <header><span class="letter"><b>${k}</b>VERSION ${k}</span>${picked?`<span class="verdict-tag">Your pick</span>`:tied?`<span class="verdict-tag">Even</span>`:p==="skip"?`<span class="verdict-tag skip">Skipped</span>`:""}</header>
+      <div class="email">
+        <figure><img src="img/${s.id}.jpg" alt="${esc(s.alt)}" loading="lazy"></figure>
+        <div class="body">
+          <h3>${esc(s.h)}</h3>
+          <p class="by">By ${esc(s.by)}</p>
+          <ul>${list(s.v[i])}</ul>
+          <a class="read" href="${esc(s.url)}" target="_blank" rel="noopener">Read this story</a>
+        </div>
+      </div>
+      ${state.done ? `<div class="src ${i===s.d?"":"claude"}">${i===s.d?"Sent in the newsletter":"Written by Claude"}</div>` :
+        `<button type="button" class="choose" data-pick="${k}" aria-pressed="${picked}">${picked?"✓ You like "+k+" more":"I like "+k+" more"}</button>`}
+    </article>`;
+  };
+  const allDone = graded() === N;
+  $("view").innerHTML = `<div class="story">
+    <div class="slug mono"><span class="n">Story ${two(state.cur+1)} of ${N}</span><span>Click the one you like more</span></div>
+    <div class="proofs">${card("A",0)}${card("B",1)}</div>
+    ${state.done ? "" : `<div class="even"><button type="button" data-pick="same" aria-pressed="${p==="same"}">${p==="same"?"✓ You called them even":"Can’t choose? Call them even"}</button><span aria-hidden="true">·</span><button type="button" data-pick="skip" aria-pressed="${p==="skip"}">${p==="skip"?"✓ Skipped: you worked on this story":"I wrote or edited this story. Skip it"}</button></div>
+    <div class="note"><label class="mono" for="note">What tipped it? Optional</label>
+      <textarea id="note" placeholder="A label that hooked you, a sentence that dragged, a fact that was wrong…">${esc(state.notes[s.id]||"")}</textarea></div>`}
+    <div class="nav">
+      <button type="button" class="btn" id="prev" ${state.cur===0?"disabled":""}>← Previous</button>
+      ${state.done ? `<button type="button" class="btn primary" id="toresults">Back to results</button>` :
+        `<button type="button" class="btn primary" id="next" ${p?"":"disabled"}>${state.cur===N-1?"Done":"Next story →"}</button>`}
+      <span class="status" id="status"></span>
+    </div>
+    ${!state.done && allDone ? `<div class="finish"><h3>All ${N} graded.</h3><p>Submitting locks your picks and shows who wrote each set, along with the team’s results so far.</p><div><button type="button" class="btn primary" id="submit">Submit and see results</button></div></div>` : ""}
+  </div>`;
+}
+
+function tally(rows){
+  const t = {desk:0, claude:0, same:0};
+  rows.forEach(r => { if(r in t) t[r]++; }); return t;
+}
+function bar(t){
+  const n = t.desk + t.claude + t.same || 1;
+  return `<div class="barcell"><div class="bar" role="img" aria-label="${t.desk} preferred the newsletter, ${t.same} even, ${t.claude} preferred Claude"><i class="d" style="width:${t.desk/n*100}%"></i><i class="t" style="width:${t.same/n*100}%"></i><i class="c" style="width:${t.claude/n*100}%"></i></div><small><span>${t.desk} sent</span><span>${t.same} even</span><span>${t.claude} Claude</span></small></div>`;
+}
+
+const pct = (n, of) => of ? Math.round(n/of*100) + "%" : "–";
+const prefLabel = {desk:"Sent", claude:"Claude", same:"Even", skip:"Skipped"};
+const TEAMS = ["Editor", "Writer", "Digital", "Media Relations", "Social Media", "Photo/Video", "Other"];
+function renderDash(){
+  if(!state.done && !isOwner && location.hash !== "#results"){
+    $("view").innerHTML = `<div class="results"><h2>Results open once you’ve finished all ${N} stories.</h2><p class="lede">You’re ${graded()} in. Seeing the team’s picks first would sway yours.</p><div><button type="button" class="btn primary" data-go="${Math.max(0, STORIES.findIndex(s => !state.picks[s.id]))}">Keep grading</button></div></div>`;
+    return;
+  }
+  if(team === null){ $("view").innerHTML = `<div class="results"><p class="empty">${teamErr || "Loading results…"}</p></div>`; return; }
+  const people = [...team].sort((a,b) => String(a.name||"").localeCompare(String(b.name||"")));
+  const nameOf = d => d.name || "Unnamed";
+  const rowsOf = d => STORIES.map(s => d.picks?.[s.id] ? pref(s, d.picks[s.id]) : null);
+  const counted = t => t.desk + t.same + t.claude;
+  const all = tally(people.flatMap(rowsOf));
+  const finished = people.filter(d => d.done).length;
+  const mineRows = STORIES.map(s => state.picks[s.id] ? pref(s, state.picks[s.id]) : null), mine = tally(mineRows);
+  const you = state.done ? `
+    <section class="you">
+      <h2>You preferred Claude’s bullets in ${mine.claude} of ${counted(mine)} stories.</h2>
+      <div class="score">
+        <div><strong>${mine.desk}</strong><span>Preferred what went out</span></div>
+        <div><strong>${mine.same}</strong><span>Called it even</span></div>
+        <div><strong>${mine.claude}</strong><span>Preferred Claude</span></div>
+      </div>
+      <details class="xrow mine"><summary class="row"><span class="n"></span><span class="h">Your picks, story by story</span></summary>
+        <div class="xbody"><table class="ptable"><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} <button type="button" class="linkish" data-go="${i}">${esc(s.h)}</button></td><td><span class="pill ${mineRows[i]}">${prefLabel[mineRows[i]]||"–"}</span></td></tr>`).join("")}</tbody></table></div></details>
+    </section>` : "";
+  const byTeam = TEAMS.map(tm => { const ps = people.filter(d => d.team === tm); const t = tally(ps.flatMap(rowsOf)); return {tm, n:ps.length, t}; }).filter(x => x.n);
+  $("view").innerHTML = `<div class="results">
+    ${you}
+    <section>
+      <div class="section-h"><h3>Everyone</h3><button type="button" class="btn" id="refresh">Refresh</button></div>
+      <p class="lede">${people.length} ${people.length===1?"person has":"people have"} graded, ${finished} finished. Skipped stories don’t count toward anyone’s split.</p>
+      <div class="score">
+        <div><strong>${pct(all.desk, counted(all))}</strong><span>${all.desk} picks for what went out</span></div>
+        <div><strong>${pct(all.same, counted(all))}</strong><span>${all.same} called even</span></div>
+        <div><strong>${pct(all.claude, counted(all))}</strong><span>${all.claude} picks for Claude</span></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--ink)"></i>Sent in the newsletter</span><span><i style="background:var(--rule-strong)"></i>Even</span><span><i style="background:var(--accent)"></i>Claude</span></div>
+    </section>
+    ${byTeam.length ? `<section><div class="section-h"><h3>By team</h3></div><div class="rows">${byTeam.map(x => `<div class="row"><span class="n">${x.n}</span><span class="h">${esc(x.tm)}<small>${x.n} ${x.n===1?"person":"people"} · Sent ${pct(x.t.desk,counted(x.t))} · Even ${pct(x.t.same,counted(x.t))} · Claude ${pct(x.t.claude,counted(x.t))}</small></span>${bar(x.t)}</div>`).join("")}</div></section>` : ""}
+    <section>
+      <div class="section-h"><h3>By story</h3><span class="hint">Click a story for names and notes</span></div>
+      <div class="rows">${STORIES.map((s,i) => { const ps = people.map(d => d.picks?.[s.id] ? {d, r:pref(s, d.picks[s.id])} : null).filter(Boolean); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
+        const notes = ps.filter(x => (x.d.notes?.[s.id]||"").trim()).length;
+        return `<details class="xrow"><summary class="row"><span class="n">${two(i+1)}</span><span class="h">${esc(s.h)}<small>${n} ${n===1?"vote":"votes"} · Sent ${pct(t.desk,n)} · Even ${pct(t.same,n)} · Claude ${pct(t.claude,n)}${sk?` · ${sk} skipped`:""}${notes?` · ${notes} ${notes===1?"note":"notes"}`:""}</small></span>${bar(t)}</summary>
+          <div class="xbody">${ps.length ? `<table class="ptable"><thead><tr><th>Name</th><th>Team</th><th>Picked</th><th>Note</th></tr></thead><tbody>${ps.map(x => `<tr><td>${esc(nameOf(x.d))}</td><td>${esc(x.d.team||"")}</td><td><span class="pill ${x.r}">${prefLabel[x.r]}</span></td><td>${esc(x.d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">No votes yet.</p>`}</div></details>`; }).join("")}</div>
+    </section>
+    <section>
+      <div class="section-h"><h3>By person</h3><span class="hint">Click a name for every pick and note</span></div>
+      ${people.length ? `<div class="rows">${people.map(d => { const rs = rowsOf(d), t = tally(rs), g = rs.filter(Boolean).length;
+        return `<details class="xrow"><summary class="row"><span class="n">${d.done?"✓":g}</span><span class="h">${esc(nameOf(d))}${d.team?` <span class="team">${esc(d.team)}</span>`:""}<small>${d.done?"Finished":g+" of "+N+" graded"} · Sent ${t.desk} · Even ${t.same} · Claude ${t.claude}</small></span>${bar(t)}</summary>
+          <div class="xbody"><table class="ptable"><thead><tr><th>Story</th><th>Picked</th><th>Note</th></tr></thead><tbody>${STORIES.map((s,i) => `<tr><td>${two(i+1)} ${esc(s.h)}</td><td>${rs[i]?`<span class="pill ${rs[i]}">${prefLabel[rs[i]]}</span>`:"–"}</td><td>${esc(d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table></div></details>`; }).join("")}</div>` : `<p class="empty">No responses yet.</p>`}
+    </section>
+  </div>`;
+}
+
+function render(){
+  renderTicks();
+  $("who").hidden = !state.name; $("who").textContent = state.team ? state.name + " · " + state.team : state.name;
+  $("admin").hidden = !state.name; $("admin").setAttribute("aria-pressed", state.mode === "results");
+  state.mode === "results" ? renderDash() : renderGrade();
+}
+
+function setStatus(t){ const el = $("status"); if(el) el.textContent = t; }
+let saveTimer = null;
+async function save(now){
+  clearTimeout(saveTimer);
+  const run = async () => {
+    if(!/^https?:\/\//.test(SCRIPT_URL)){ setStatus("Not saving yet: the results sheet isn’t connected."); return; }
+    const body = {id:gid, name:state.name, team:state.team, done:state.done, picks:state.picks, notes:state.notes,
+      headers: STORIES.flatMap((s,i) => [`${two(i+1)} ${s.h}`, `${two(i+1)} note`]),
+      summary: STORIES.map(s => [state.picks[s.id] ? PICK_LABEL[pref(s, state.picks[s.id])] : "", state.notes[s.id] || ""])};
+    try{
+      const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body)});
+      const j = await r.json(); if(!j.ok) throw new Error(j.error || "rejected");
+      setStatus("Saved");
+    }catch(e){ setStatus("Couldn’t save. Your picks are kept in this browser; we’ll retry on your next pick."); }
+  };
+  if(now) return run();
+  saveTimer = setTimeout(run, 900);
+}
+
+async function loadTeam(){
+  if(!/^https?:\/\//.test(SCRIPT_URL)){ team = []; teamErr = "The results sheet isn’t connected yet."; return; }
+  try{
+    const j = await (await fetch(SCRIPT_URL)).json();
+    team = (j.rows || []).map(r => ({...r, _id:r.key}));
+    // Show this browser's latest picks even if the sheet hasn't caught up.
+    const me = team.find(r => r.key === myKey);
+    if(me){ Object.assign(me, {name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, done:state.done}); }
+    else if(state.name && graded()) team.push({key:myKey, _id:myKey, name:state.name, team:state.team, picks:{...state.picks}, notes:{...state.notes}, done:state.done});
+    teamErr = "";
+  }catch(e){ team = null; teamErr = "Couldn’t load results. Check your connection and refresh."; }
+}
+
+function keepLocal(){ try{ localStorage.setItem("grader-state", JSON.stringify({picks:state.picks, notes:state.notes, done:state.done})); }catch(_){} }
+function go(i){ state.cur = Math.max(0, Math.min(N-1, i)); state.mode = "grade"; render(); window.scrollTo({top:0, behavior:"auto"}); }
+function pick(k){
+  if(state.done) return;
+  if(!state.name || !state.team){ openHowto(); return; }
+  state.picks[STORIES[state.cur].id] = k; keepLocal(); render(); save(true);
+}
+
+document.addEventListener("click", async e => {
+  const g = e.target.closest("[data-go]"); if(g){ go(+g.dataset.go); return; }
+  if(e.target.closest("a")) return;
+  const p = e.target.closest("[data-pick]"); if(p){ pick(p.dataset.pick); return; }
+  const id = e.target.closest("button")?.id;
+  if(id === "prev") go(state.cur-1);
+  if(id === "next"){ const nxt = STORIES.findIndex((s,i) => i > state.cur && !state.picks[s.id]); const any = STORIES.findIndex(s => !state.picks[s.id]); go(nxt !== -1 ? nxt : any !== -1 ? any : state.cur); }
+  if(id === "submit"){ state.done = true; keepLocal(); state.mode = "results"; render(); await save(true); await loadTeam(); render(); window.scrollTo({top:0}); }
+  if(id === "toresults"){ state.mode = "results"; team = null; render(); await loadTeam(); render(); window.scrollTo({top:0}); }
+  if(id === "refresh"){ team = null; render(); await loadTeam(); render(); }
+  if(id === "admin"){ state.mode = "results"; team = null; render(); await loadTeam(); render(); window.scrollTo({top:0}); }
+  if(id === "who"){ openHowto(); }
+});
+document.addEventListener("input", e => {
+  if(e.target.id === "note"){ state.notes[STORIES[state.cur].id] = e.target.value; keepLocal(); save(false); }
+});
+document.addEventListener("keydown", e => {
+  if(e.target.closest("textarea,input") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if(state.mode !== "grade") return;
+  if(k === "a") pick("A"); else if(k === "b") pick("B"); else if(k === "e") pick("same");
+  else if(e.key === "ArrowRight") go(state.cur+1); else if(e.key === "ArrowLeft") go(state.cur-1);
+});
+
+function openHowto(){ $("grader-name").value = state.name; document.querySelectorAll('input[name="team"]').forEach(r => r.checked = r.value === state.team); const d = $("howto"); if(!d.open){ try{ d.showModal(); }catch(_){ d.setAttribute("open",""); } } $("grader-name").focus(); }
+function closeHowto(){ const d = $("howto"); try{ d.close(); }catch(_){ d.removeAttribute("open"); } }
+$("howto").addEventListener("cancel", e => { if(!state.name || !state.team) e.preventDefault(); });
+$("howto-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("grader-name").value.trim().replace(/\s+/g," ").slice(0,80);
+  const tm = document.querySelector('input[name="team"]:checked')?.value || "";
+  $("name-err").hidden = !!v; $("team-err").hidden = !!tm;
+  if(!v){ $("grader-name").focus(); return; } if(!tm) return;
+  state.name = v; state.team = tm; try{ localStorage.setItem("grader-name", v); localStorage.setItem("grader-team", tm); }catch(_){}
+  closeHowto(); render(); save(true);
+});
+try{ state.name = localStorage.getItem("grader-name") || ""; state.team = localStorage.getItem("grader-team") || ""; }catch(_){}
+render();
+if(!state.name || !state.team) openHowto();
+(async () => {
+  isOwner = location.hash === "#results";
+  try{
+    const s = JSON.parse(localStorage.getItem("grader-state") || "null");
+    if(s && typeof s === "object"){ Object.assign(state.picks, s.picks || {}); Object.assign(state.notes, s.notes || {}); state.done = !!s.done && graded() === N; }
+  }catch(_){}
+  myKey = await sha256(gid);
+  if(state.done || isOwner){ state.mode = "results"; render(); await loadTeam(); }
+  else { const n = STORIES.findIndex(s => !state.picks[s.id]); state.cur = n === -1 ? N-1 : n; }
+  render();
+  setStatus(!/^https?:\/\//.test(SCRIPT_URL) ? "Not saving yet: the results sheet isn’t connected." : graded() ? "Picks restored" : "Picks save as you go");
+})();
+</script>
+
+</html>
