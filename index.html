@@ -214,6 +214,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .scale button[data-pick^="A"][aria-checked="true"],.scale button[data-pick^="B"][aria-checked="true"]{background:var(--accent);color:#fff}
 .scale-ends{display:flex;justify-content:space-between;margin-top:6px;font-size:12.5px;color:var(--faint)}
 @media (max-width:560px){.scale button{font-size:13px;padding:10px 2px}.scale button small{font-size:11px}}
+.tablewrap{overflow-x:auto}
+.story-res{display:flex;flex-direction:column;gap:var(--s4);margin-top:var(--s5)}
 .why-pick{margin-top:var(--s4);display:flex;flex-direction:column;gap:var(--s2)}
 .why-pick .mono{color:var(--muted)}
 .chip.sm span{padding:6px 11px;font-size:13.5px}
@@ -346,12 +348,30 @@ function renderGrade(){
       <textarea id="note" placeholder="A label that hooked you, a sentence that dragged, a fact that was wrong…">${esc(state.notes[s.id]||"")}</textarea></div>`}
     <div class="nav">
       <button type="button" class="btn" id="prev" ${state.cur===0?"disabled":""}>← Previous</button>
-      ${state.done ? `<button type="button" class="btn primary" id="toresults">Back to results</button>` :
+      ${state.done ? `<button type="button" class="btn" id="toresults">Back to results</button><button type="button" class="btn primary" data-go="${state.cur+1}" ${state.cur===N-1?"disabled":""}>Next story →</button>` :
         `<button type="button" class="btn primary" id="next" ${p?"":"disabled"}>${state.cur===N-1?"Done":"Next story →"}</button>`}
       <span class="status" id="status"></span>
     </div>
+    ${state.done ? storyResults(s) : ""}
     ${!state.done && allDone ? `<div class="finish"><h3>All ${N} graded.</h3><p>Submitting locks your picks and shows who wrote each set, along with the team’s results so far.</p><div><button type="button" class="btn primary" id="submit">Submit and see results</button></div></div>` : ""}
   </div>`;
+}
+
+// After submitting, each story shows how the team voted on it, so you can compare the two sets with the verdict in view.
+function storyResults(s){
+  if(team === null) return `<section class="story-res"><p class="empty">${teamErr || "Loading the team’s votes…"}</p></section>`;
+  const ps = votesOn(s), t = tally(ps.map(x => x.r)), n = counted(t);
+  const why = {desk:{}, claude:{}};
+  ps.forEach(x => { const r = pref(s, x.d.picks[s.id]); if(why[r]) reasonsOf(x.d, s).forEach(k => why[r][k] = (why[r][k]||0) + 1); });
+  const wmax = Math.max(1, ...REASONS.flatMap(r => [why.desk[r]||0, why.claude[r]||0]));
+  const anyWhy = REASONS.some(r => why.desk[r] || why.claude[r]);
+  return `<section class="story-res">
+    <div class="section-h"><h3>How the team voted</h3><span class="hint">${n} ${n===1?"vote":"votes"}${state.picks[s.id] ? ` · you: ${LVL_LABEL[lvl(s, state.picks[s.id])]}` : ""}</span></div>
+    ${divbar(t, true)}
+    ${anyWhy ? `<div><div class="why head"><span class="l">For the writers</span><span class="lab"></span><span class="r">For Claude</span></div>
+      ${REASONS.filter(r => why.desk[r] || why.claude[r]).map(r => { const a = why.desk[r]||0, b = why.claude[r]||0; return `<div class="why"><span class="l">${a}<i style="width:${a/wmax*80}%"></i></span><span class="lab">${esc(r)}</span><span class="r"><i style="width:${b/wmax*80}%"></i>${b}</span></div>`; }).join("")}</div>` : ""}
+    <div class="tablewrap">${voteTable(s, ps)}</div>
+  </section>`;
 }
 
 function tally(rows){
@@ -374,6 +394,11 @@ function divbar(t, big){
 }
 const legend = `<div class="legend">${SEGS.map(k => `<span><i class="sw ${k}"></i>${LVL_LABEL[k]}</span>`).join("")}</div>`;
 const pill = r => r ? `<span class="pill ${r[0]==="d"?"desk":r[0]==="c"?"claude":r} ${/2$/.test(r)?"lot":""}">${LVL_LABEL[r]}</span>` : `<span class="hint">–</span>`;
+const nameOf = d => d.name || "Unnamed";
+const reasonsOf = (d, s) => (d.reasons?.[s.id] || []).filter(r => REASONS.includes(r));
+const votesOn = s => (team || []).map(d => d.picks?.[s.id] ? {d, r:lvl(s, d.picks[s.id])} : null).filter(Boolean)
+  .sort((a,b) => nameOf(a.d).localeCompare(nameOf(b.d)));
+const voteTable = (s, ps) => ps.length ? `<table class="ptable"><thead><tr><th>Name</th><th>Team</th><th>Picked</th><th>Why</th><th>Note</th></tr></thead><tbody>${ps.map(x => `<tr><td>${esc(nameOf(x.d))}</td><td>${esc(x.d.team||"")}</td><td>${pill(x.r)}</td><td>${esc(reasonsOf(x.d, s).join(", "))}</td><td>${esc(x.d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">No votes yet.</p>`;
 const TEAMS = ["Editor", "Writer", "Digital", "Media Relations", "Social Media", "Photo/Video", "Other"];
 const MIN_N = 3; // groups smaller than this are shown faded: too few people to read a split from
 
@@ -384,12 +409,10 @@ function renderDash(){
   }
   if(team === null){ $("view").innerHTML = `<div class="results"><p class="empty">${teamErr || "Loading results…"}</p></div>`; return; }
   const people = [...team].sort((a,b) => String(a.name||"").localeCompare(String(b.name||"")));
-  const nameOf = d => d.name || "Unnamed";
   const rowsOf = d => STORIES.map(s => d.picks?.[s.id] ? lvl(s, d.picks[s.id]) : null);
   const all = tally(people.flatMap(rowsOf));
   const finished = people.filter(d => d.done).length;
   const mineRows = STORIES.map(s => state.picks[s.id] ? lvl(s, state.picks[s.id]) : null), mine = tally(mineRows);
-  const reasonsOf = (d, s) => (d.reasons?.[s.id] || []).filter(r => REASONS.includes(r));
 
   const you = state.done ? `
     <section class="you">
@@ -429,10 +452,10 @@ function renderDash(){
     <section>
       <div class="section-h"><h3>By story</h3><span class="hint">Click a story for names, reasons and notes</span></div>
       <div class="axis"><span>← Preferred the writers</span><span>Preferred Claude →</span></div>
-      <div class="rows">${STORIES.map((s,i) => { const ps = people.map(d => d.picks?.[s.id] ? {d, r:lvl(s, d.picks[s.id])} : null).filter(Boolean); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
+      <div class="rows">${STORIES.map((s,i) => { const ps = votesOn(s); const t = tally(ps.map(x => x.r)), n = counted(t), sk = ps.filter(x => x.r==="skip").length;
         const notes = ps.filter(x => (x.d.notes?.[s.id]||"").trim()).length;
         return `<details class="xrow"><summary class="row wide ${n<MIN_N?"thin":""}"><span class="n">${two(i+1)}</span><span class="h">${esc(s.h)}<small>${n} ${n===1?"vote":"votes"}${sk?` · ${sk} skipped`:""}${notes?` · ${notes} ${notes===1?"note":"notes"}`:""}</small></span>${divbar(t)}</summary>
-          <div class="xbody">${ps.length ? `<table class="ptable"><thead><tr><th>Name</th><th>Team</th><th>Picked</th><th>Why</th><th>Note</th></tr></thead><tbody>${ps.map(x => `<tr><td>${esc(nameOf(x.d))}</td><td>${esc(x.d.team||"")}</td><td>${pill(x.r)}</td><td>${esc(reasonsOf(x.d, s).join(", "))}</td><td>${esc(x.d.notes?.[s.id]||"")}</td></tr>`).join("")}</tbody></table>` : `<p class="empty">No votes yet.</p>`}</div></details>`; }).join("")}</div>
+          <div class="xbody">${voteTable(s, ps)}</div></details>`; }).join("")}</div>
     </section>
     <section>
       <div class="section-h"><h3>By person</h3><span class="hint">Click a name for every pick and note</span></div>
@@ -489,7 +512,8 @@ async function loadTeam(){
 }
 
 function keepLocal(){ try{ localStorage.setItem("grader-state", JSON.stringify({picks:state.picks, notes:state.notes, reasons:state.reasons, done:state.done})); }catch(_){} }
-function go(i){ state.cur = Math.max(0, Math.min(N-1, i)); state.mode = "grade"; render(); window.scrollTo({top:0, behavior:"auto"}); }
+function go(i){ state.cur = Math.max(0, Math.min(N-1, i)); state.mode = "grade"; render(); window.scrollTo({top:0, behavior:"auto"});
+  if(state.done && team === null && !teamErr) loadTeam().then(render); }
 function pick(k){
   if(state.done) return;
   if(!state.name || !state.team){ openHowto(); return; }
