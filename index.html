@@ -480,10 +480,15 @@ async function post(){
     headers: STORIES.flatMap((s,i) => [`${two(i+1)} ${s.h}`, `${two(i+1)} note`]),
     summary: STORIES.map(s => [state.picks[s.id] ? [LVL_LABEL[lvl(s, state.picks[s.id])], ...(state.reasons[s.id]||[])].join(" · ") : "", state.notes[s.id] || ""])};
   try{
-    const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body)});
+    // A request that never answers would hold the queue forever and silently stop every later save.
+    const r = await fetch(SCRIPT_URL, {method:"POST", body:JSON.stringify(body), signal:AbortSignal.timeout(20000)});
     const j = await r.json(); if(!j.ok) throw new Error(j.error || "rejected");
     setStatus("Saved");
-  }catch(e){ setStatus("Couldn’t save. Your picks are kept in this browser; we’ll retry on your next pick."); }
+  }catch(e){
+    setStatus("Couldn’t save yet. Your picks are kept in this browser; retrying…");
+    // ponytail: fixed 10 s retry while the page is open; backoff if Google starts rate-limiting
+    clearTimeout(saveTimer); saveTimer = setTimeout(run, 10000);
+  }
 }
 // Apps Script drops overlapping requests, so one save runs at a time; picks made meanwhile ride the next one.
 function run(){
@@ -501,7 +506,7 @@ async function save(now){
 async function loadTeam(){
   if(!/^https?:\/\//.test(SCRIPT_URL)){ team = []; teamErr = "The results sheet isn’t connected yet."; return; }
   try{
-    const j = await (await fetch(SCRIPT_URL)).json();
+    const j = await (await fetch(SCRIPT_URL, {signal:AbortSignal.timeout(20000)})).json();
     team = (j.rows || []).map(r => ({...r, _id:r.key}));
     // Show this browser's latest picks even if the sheet hasn't caught up.
     const me = team.find(r => r.key === myKey);
@@ -577,6 +582,8 @@ if(!state.name || !state.team) openHowto();
   if(state.done || isOwner){ state.mode = "results"; render(); await loadTeam(); }
   else { const n = STORIES.findIndex(s => !state.picks[s.id]); state.cur = n === -1 ? N-1 : n; }
   render();
+  // Re-send what this browser holds, so picks a failed save missed reach the sheet on the next visit.
+  if(state.name && graded()) save(true);
   setStatus(!/^https?:\/\//.test(SCRIPT_URL) ? "Not saving yet: the results sheet isn’t connected." : graded() ? "Picks restored" : "Picks save as you go");
 })();
 </script>
